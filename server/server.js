@@ -4,10 +4,13 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
+
+const authRoutes = require("./routes/auth/auth-routes");
+
 
 mongoose
-  .connect(process.env.MONGO_URL || "")
+  .connect(process.env.MONGO_URL || "mongodb+srv://kalriyahet:WQY0wzYGrs8za9al@cluster0.kf7rqts.mongodb.net/")
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.log("MongoDB connection failed", err));
 
@@ -18,6 +21,9 @@ app.use(cors({
 }));
 app.use(express.json());
 dotenv.config();
+
+
+app.use("/api/auth", authRoutes);
 
 
 app.listen(PORT, () => {
