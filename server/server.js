@@ -3,28 +3,33 @@ const app = express();
 const cors = require("cors");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
 
 const PORT = process.env.PORT || 8000;
 
 const authRoutes = require("./routes/auth/auth-routes");
 
-
 mongoose
-  .connect(process.env.MONGO_URL || "mongodb+srv://kalriyahet:WQY0wzYGrs8za9al@cluster0.kf7rqts.mongodb.net/")
+  .connect(
+    process.env.MONGO_URL ||
+      "mongodb+srv://kalriyahet:WQY0wzYGrs8za9al@cluster0.kf7rqts.mongodb.net/"
+  )
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.log("MongoDB connection failed", err));
 
-app.use(cors({
-  origin: "http://localhost:3000 || * ",
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-}));
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"], // ✅ Array format for multiple origins
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
+
 app.use(express.json());
 dotenv.config();
 
-
 app.use("/api/auth", authRoutes);
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

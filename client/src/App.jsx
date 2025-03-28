@@ -1,32 +1,81 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AuthLayout from "./components/auth/AuthLayout";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import AuthLogin from "./pages/auth/login";
 import AuthRegister from "./pages/auth/register";
+import { useEffect } from "react";
+import CheckAuth from "./components/common/CheckAuth";
+import { checkAuth } from "./store/auth-slice/auth";
+import AdminLayout from "./components/admin-view/layout";
+import AdminDashboard from "./pages/admin-view/dashboard";
+import KitchenLayout from "./components/kitchen-view/layout";
+import KitchenHome from "./pages/kitchen-view/home";
+import KitchenSettings from "./pages/kitchen-view/settings";
+import Loader from "./components/common/Loader";
+import { Toaster } from "react-hot-toast";
 
 function App() {
-  //   const { user, isAuthenticated, isLoading } = useSelector(
-  //     (state) => state.auth
-  //   );
-  //   const dispatch = useDispatch();
+  const { user, isAuthenticated, isLoading } = useSelector(
+    (state) => state.auth
+  );
+  const dispatch = useDispatch();
 
-  //   useEffect(() => {
-  //     dispatch(checkAuth());
-  //   }, [dispatch]);
+  useEffect(() => {
+    dispatch(checkAuth());
+  }, [dispatch]);
 
-  //   if (isLoading) {
-  //     return <div>Loading...</div>;
-  //   }
+  if (isLoading) {
+    return <div><Loader /></div>;
+  }
 
   return (
     <div>
+    <Toaster />
       <Routes>
         <Route path="/" element={<Navigate to="/auth/login" replace />} />
 
-        <Route path="/auth" element={<AuthLayout />}>
+        <Route
+          path="/auth"
+          element={
+            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+              <AuthLayout />
+            </CheckAuth>
+          }
+        >
           <Route path="login" element={<AuthLogin />} />
           <Route path="register" element={<AuthRegister />} />
         </Route>
+
+        <Route
+          path="/admin"
+          element={
+            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+              <AdminLayout />
+            </CheckAuth>
+          }
+        >
+          <Route path="dashboard" element={<AdminDashboard />} />
+        </Route>
+
+        <Route
+          path="/kitchen"
+          element={
+            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+              <KitchenLayout />
+            </CheckAuth>
+          }
+        >
+          <Route path="home" element={<KitchenHome />} />
+          <Route path="settings" element={<KitchenSettings />} />
+        </Route>
+
+        <Route
+          path="/staff"
+          element={
+            <CheckAuth isAuthenticated={isAuthenticated} user={user}> 
+            </CheckAuth>
+          }
+        ></Route>
       </Routes>
     </div>
   );

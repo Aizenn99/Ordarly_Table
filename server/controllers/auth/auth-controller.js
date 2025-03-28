@@ -79,19 +79,23 @@ const loginUser = async (req, res) => {
 
 //auth middleware
 
-const authMiddleWare = async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
+const authMiddleWare = async (req, res, next) => { // ✅ Add `next` as a parameter
   try {
+    const token = req.cookies?.token; // ✅ Use optional chaining to avoid errors
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
+    req.user = decoded; // ✅ Store decoded user in `req.user`
+
+    next(); // ✅ Call next() to pass control to the next middleware or route handler
   } catch (error) {
-    console.error(error);
-    res.status(401).json({ message: "Unauthorized" });
+    console.error("Auth Error:", error);
+    return res.status(403).json({ success: false, message: "Unauthorized: Invalid token" });
   }
 };
+
 
 module.exports = { loginUser, authMiddleWare, registerUser };

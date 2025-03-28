@@ -8,10 +8,17 @@
   --font-display: "JetBrains Mono", monospace;
   --breakpoint-3xl: 1920px;
   --color-primary1: #005C3C;
-  --color-beige : #FEF9C3 ;
-  --color-redbtn : #DC2626;
+  --color-beige: #FEF9C3;
+  --color-redbtn: #DC2626;
 }
 
+.btn {
+  @apply w-full text-sm font-medium text-white bg-transparent border border-white cursor-pointer shadow-green-500/20 p-[10px] rounded-md my-1
+}
+
+.card-login {
+  @apply bg-white p-6  w-[350px] h-[600px] rounded-2xl shadow-md bg-[url(/login-img.png)] bg-cover shadow-gray-100 border border-primary1;
+}
 
 @layer base {
   html {
