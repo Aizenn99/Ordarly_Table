@@ -7,31 +7,43 @@ const User = require("../../models/user");
 const registerUser = async (req, res) => {
   const { username, email, password } = req.body;
 
+  if (!username || !email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required",
+    });
+  }
+
   try {
-    const checkUser = await User.findOne({ email });
-    if (checkUser)
-      return res.json({
+    const checkUser = await User.findOne({ email: email.toLowerCase() });
+
+    if (checkUser) {
+      return res.status(409).json({
         success: false,
-        message: "User Already exists with the same email! Please try again",
+        message: "User already exists with this email! Please try again",
       });
+    }
 
     const hashPassword = await bcrypt.hash(password, 10);
+   
+
     const newUser = new User({
       username,
-      email,
+      email: email.toLowerCase(),
       password: hashPassword,
     });
 
     await newUser.save();
-    res.status(200).json({
+
+    res.status(201).json({
       success: true,
       message: "Registration successful",
     });
   } catch (e) {
-    console.log(e);
+    console.error("Error in registration:", e);
     res.status(500).json({
       success: false,
-      message: "Some error occured",
+      message: "An error occurred. Please try again later",
     });
   }
 };

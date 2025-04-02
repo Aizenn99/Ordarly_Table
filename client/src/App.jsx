@@ -13,6 +13,14 @@ import KitchenHome from "./pages/kitchen-view/home";
 import KitchenSettings from "./pages/kitchen-view/settings";
 import Loader from "./components/common/Loader";
 import { Toaster } from "react-hot-toast";
+import AdminOrders from "./pages/admin-view/orders";
+import AdminMenu from "./pages/admin-view/menu";
+import AdminTableQR from "./pages/admin-view/table-qr";
+import AdminBills from "./pages/admin-view/bills";
+import AdminSettings from "./pages/admin-view/settings";
+import AdminReports from "./pages/admin-view/reports";
+import AdminUpdate from "./pages/admin-view/update-help";
+import AdminUser from "./pages/admin-view/user-access";
 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
@@ -55,6 +63,15 @@ function App() {
           }
         >
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="orders" element={<AdminOrders/>} />
+          <Route path="menu" element={<AdminMenu/>} />
+          <Route path="table-qr" element={<AdminTableQR/>} />
+          <Route path="bills" element={<AdminBills/>} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="reports" element={<AdminReports/>}/>
+          <Route path="update-help" element={<AdminUpdate/>}/>
+          <Route path="user-access" element={<AdminUser />}/>
+
         </Route>
 
         <Route
