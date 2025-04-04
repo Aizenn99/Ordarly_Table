@@ -8,6 +8,7 @@ const cookieParser = require("cookie-parser");
 const PORT = process.env.PORT || 8000;
 
 const authRoutes = require("./routes/auth/auth-routes");
+const adminRoutes = require("./routes/admin/admin-routes");
 
 mongoose
   .connect(
@@ -30,6 +31,7 @@ app.use(express.json());
 dotenv.config();
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

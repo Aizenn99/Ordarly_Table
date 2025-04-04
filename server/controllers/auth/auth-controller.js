@@ -25,7 +25,6 @@ const registerUser = async (req, res) => {
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
-   
 
     const newUser = new User({
       username,
@@ -72,9 +71,11 @@ const loginUser = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.cookie("token", token, { httpOnly: true, secure: true }).json({
+    res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "None",
+      path: "/", }).json({
       success: true,
       message: "login successfully",
+
       user: {
         email: checkUser.email,
         role: checkUser.role,
@@ -89,25 +90,45 @@ const loginUser = async (req, res) => {
   }
 };
 
-//auth middleware
+//Logout User
 
-const authMiddleWare = async (req, res, next) => { // ✅ Add `next` as a parameter
-  try {
-    const token = req.cookies?.token; // ✅ Use optional chaining to avoid errors
-
-    if (!token) {
-      return res.status(401).json({ success: false, message: "Unauthorized: No token provided" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // ✅ Store decoded user in `req.user`
-
-    next(); // ✅ Call next() to pass control to the next middleware or route handler
-  } catch (error) {
-    console.error("Auth Error:", error);
-    return res.status(403).json({ success: false, message: "Unauthorized: Invalid token" });
-  }
+const LogoutUser = (req, res) => {
+  res.clearCookie("token").status(200).json({
+    success: true,
+    message: "Logged out successfully!",
+  });
 };
 
 
-module.exports = { loginUser, authMiddleWare, registerUser };
+
+//auth middleware
+
+const authMiddleWare = async (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Unauthorized: No token provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    console.error("Auth Error:", error);
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      path: "/",
+    }); // Ensure invalid token is removed
+
+    return res
+      .status(403)
+      .json({ success: false, message: "Unauthorized: Invalid token" });
+  }
+};
+
+module.exports = { loginUser, authMiddleWare, registerUser , LogoutUser};

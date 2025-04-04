@@ -3,12 +3,27 @@ import { useDispatch, useSelector } from "react-redux";
 import { RiMenu3Fill } from "react-icons/ri";
 import { Button } from "../ui/button";
 import { FaLeaf } from "react-icons/fa";
+import { SlLogout } from "react-icons/sl";
+
 import { IoNotifications } from "react-icons/io5";
 import { Avatar, AvatarFallback } from "../ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { logoutUser } from "@/store/auth-slice/auth";
 
 const AdminNavbar = ({ setOpen }) => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+
+  function handleLogout() {
+    dispatch(logoutUser());
+  }
 
   return (
     <header className="flex items-center justify-between px-4 py-3 bg-background border-b">
@@ -21,11 +36,26 @@ const AdminNavbar = ({ setOpen }) => {
       {/* Menu Button (Visible only on small screens) */}
       <div className="text-primary1 lg:hidden flex items-center gap-3">
         <IoNotifications size={24} className="text-primary1 cursor-pointer" />
-        <Avatar className="w-8 h-8 flex items-center cursor-pointer justify-center">
-          <AvatarFallback>
-            {user?.userName ? user.userName[0].toUpperCase() : ""}
-          </AvatarFallback>
-        </Avatar>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Avatar className="w-8 h-8 flex items-center cursor-pointer justify-center">
+              <AvatarFallback>
+                {user?.userName ? user.userName[0].toUpperCase() : ""}
+              </AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="left" className="w-56">
+            <DropdownMenuLabel className="flex items-center justify-center">
+              {user?.userName}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              <SlLogout className="w-4 h-4 mr-2" />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button
           onClick={() => setOpen(true)}
           className=" bg-primary1 text-white"
@@ -37,11 +67,26 @@ const AdminNavbar = ({ setOpen }) => {
       {/* Notification & Avatar */}
       <div className=" hidden lg:flex items-center gap-4 sm:ml-auto">
         <IoNotifications size={24} className="text-primary1 cursor-pointer" />
-        <Avatar className="w-8 h-8 flex items-center cursor-pointer justify-center">
-          <AvatarFallback>
-            {user?.userName ? user.userName[0].toUpperCase() : ""}
-          </AvatarFallback>
-        </Avatar>
+
+        <DropdownMenu  >
+          <DropdownMenuTrigger asChild>
+            <Avatar className="w-8 h-8 flex items-center   cursor-pointer justify-center">
+              <AvatarFallback className="bg-primary1 text-white "   >
+                {user?.userName ? user.userName[0].toUpperCase() : ""}
+              </AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="left" className="w-56">
+            <DropdownMenuLabel className="flex items-center text-primary1 justify-center">
+              {user?.userName}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator   />
+            <DropdownMenuItem onClick={handleLogout}>
+              <SlLogout className="w-4 h-4 mr-2   " />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
