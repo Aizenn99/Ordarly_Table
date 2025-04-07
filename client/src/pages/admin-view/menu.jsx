@@ -1,12 +1,92 @@
 import InfoCard from "@/components/admin-view/menu/InfoCard";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IoFastFoodOutline } from "react-icons/io5";
 import { CiCircleList } from "react-icons/ci";
 import { MdFilterList } from "react-icons/md";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import ProductImageUpload from "@/components/admin-view/menu/ProductImageUpload";
+import CommonForm from "@/components/common/form";
+import { addMenuItemsFormControls } from "@/config";
+import { useDispatch, useSelector } from "react-redux";
+import { useToaster } from "react-hot-toast";
+import {
+  addMenuItem,
+  deleteMenuItem,
+  getMenuItem,
+  updateMenuItem,
+} from "@/store/admin-slice/menuItem";
+
+const initialformData = {
+  imageURL: null,
+  title: "",
+  description: "",
+  category: "",
+  subcategory: "",
+  price: "",
+};
 
 const AdminMenu = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [openMenu, setopenMenu] = useState(false);
+  const [formData, setformData] = useState(initialformData);
+  const [currentEditedId, setCurrentEditedId] = useState(null);
+  const { menuItem } = useSelector((state) => state.adminMenuItem);
+
+  const dispatch = useDispatch();
+  const toast = useToaster();
+
+  function onSubmit() {
+    currentEditedId
+      ? dispatch(updateMenuItem({ formData, id: currentEditedId })).then(
+          (res) => {
+            if (res.payload.success) {
+              toast.success("Menu Item Updated Successfully");
+              setopenMenu(false);
+            } else {
+              toast.error(res.payload.message);
+            }
+          }
+        )
+      : dispatch(
+          addMenuItem({
+            ...formData,
+            imageURL: formData.imageURL,
+            title: formData.title,
+            description: formData.description,
+            category: formData.category,
+            subcategory: formData.subcategory,
+            price: formData.price,
+          })
+        ).then((res) => {
+          if (res.payload.success) {
+            toast.success("Menu Item Added Successfully");
+            setopenMenu(false);
+          } else {
+            toast.error(res.payload.message);
+          }
+        });
+  }
+
+  function handledelete(getcurrentMenuId) {
+    dispatch(deleteMenuItem(getcurrentMenuId)).then((res) => {
+      if (res.payload.success) {
+        toast.success("Menu Item Deleted Successfully");
+      } else {
+        toast.error(res.payload.message);
+      }
+    });
+  }
+
+  useEffect(() => {
+    dispatch(getMenuItem());
+  }, [dispatch]);
 
   const SubCategorys = [
     { id: "1", name: "Starters" },
@@ -23,53 +103,13 @@ const AdminMenu = () => {
     { id: "5", name: "Salads" },
   ];
 
-  const menuItems = [
-    {
-      id: "1",
-      img: "https://www.indianveggiedelight.com/wp-content/uploads/2021/08/air-fryer-paneer-tikka-featured.jpg",
-      name: "Paneer Tikka",
-      category: "Veg",
-      subcategory: "Starters",
-      price: 180,
-      description: "Grilled cottage cheese with Indian spices",
-    },
-    {
-      id: "2",
-      img: "https://www.thespruceeats.com/thmb/y6gT4wgjN5E4l-LNRGM8mrrpHPs=/4602x3068/filters:fill(auto,1)/traditional-chicken-wings-912937-hero-01-6c1a003373a54538a732abc0005145d8.jpg",
-      name: "Chicken Wings",
-      category: "Non-Veg",
-      subcategory: "Starters",
-      price: 220,
-      description: "Spicy and crispy chicken wings",
-    },
-    {
-      id: "3",
-      img: "https://i1.wp.com/vegecravings.com/wp-content/uploads/2017/03/samosa-recipe-step-by-step-instructions.jpg?fit=1801%2C1717&ssl=1",
-      name: "Veg Samosa",
-      category: "Veg",
-      subcategory: "Snacks",
-      price: 40,
-      description: "Crispy pastry filled with spiced potatoes",
-    },
-    {
-      id: "4",
-      name: "Chocolate Cake",
-      category: "Dessert",
-      subcategory: "Main Course",
-      price: 120,
-      description: "Rich and moist chocolate layered cake",
-    },
-    {
-      id: "5",
-      name: "Lemonade",
-      category: "Beverages",
-      subcategory: "Soups",
-      price: 60,
-      description: "Refreshing drink with lemon and mint",
-    },
-  ];
+  useEffect(() => {
+    if (!openMenu) {
+      setformData(initialformData);
+    }
+  }, [openMenu]);
 
-  const filteredMenuItems = menuItems.filter((item) => {
+  const filteredMenuItem = menuItem.filter((item) => {
     const categoryMatch = selectedCategory
       ? item.category === selectedCategory
       : true;
@@ -87,7 +127,7 @@ const AdminMenu = () => {
           <InfoCard
             icon={<IoFastFoodOutline />}
             color="bg-primary1"
-            value={menuItems.length}
+            value={menuItem.length}
             label="Total Items"
           />
           <InfoCard
@@ -165,20 +205,21 @@ const AdminMenu = () => {
         {/* FILTERED MENU ITEMS */}
         <div className="mt-8 bg-white p-4 rounded-xl">
           <h2 className="font-semibold text-xl mb-4">Menu Items</h2>
-          {filteredMenuItems.length === 0 ? (
+          {filteredMenuItem.length === 0 ? (
             <p className="text-sm text-gray-500">
               No items match the selected filters.
             </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-              {filteredMenuItems.map((item) => (
+              {filteredMenuItem.map((item) => (
                 <div
-                  key={item.id}
+                  key={item._id}
                   className="bg-white shadow rounded-xl overflow-hidden relative"
                 >
                   <img
-                    src={item.img || "https://via.placeholder.com/150"}
-                    alt={item.name}
+
+                    src={item.imageURL || ""}
+                    alt={item.title}
                     className="w-full h-36 object-cover"
                   />
                   <div className="p-3 text-left">
@@ -205,12 +246,66 @@ const AdminMenu = () => {
       </div>
 
       {/* ➕ FLOATING ADD BUTTON */}
-      <button
-        className="fixed bottom-8 right-14 z-50 bg-primary1 w-16 h-16 text-3xl text-white rounded-full shadow-lg flex items-center justify-center"
-        title="Add New Item"
+      <Sheet onOpenChange={setOpen} open={open}>
+        <button
+          onClick={() => setOpen(true)}
+          type="button"
+          className="fixed bottom-8 right-14 cursor-pointer z-50 bg-primary1 w-16 h-16 text-3xl text-white rounded-full shadow-lg flex items-center justify-center"
+          title="Add New Item"
+        >
+          +
+        </button>
+        <SheetContent className="w-96" side="right">
+          <SheetHeader className="border-b">
+            <SheetTitle className="flex gap-2 mb-6">
+              <span>Add Options</span>
+            </SheetTitle>
+          </SheetHeader>
+          <div className="p-4 flex flex-col gap-2">
+            <div
+              onClick={() => setopenMenu(true)}
+              className="card bg-[#E3F4F4] text-primary1 flex items-center justify-center cursor-pointer p-4 rounded-lg"
+            >
+              <span className="text-lg font-semibold ">Add Menu Items</span>
+            </div>
+            <div className="card bg-[#E3F4F4] text-primary1 flex items-center justify-center cursor-pointer p-4 rounded-lg">
+              <span className="text-lg font-semibold ">Add Category</span>
+            </div>
+            <div className="card bg-[#E3F4F4] text-primary1 flex items-center justify-center cursor-pointer p-4 rounded-lg">
+              <span className="text-lg font-semibold ">Add Sub-Category</span>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* SEPARATE SHEET FOR ADD MENU ITEMS */}
+      <Sheet
+        onOpenChange={setopenMenu}
+        open={openMenu}
+        setformData={initialformData}
       >
-        +
-      </button>
+        <SheetContent className="w-96 overflow-y-scroll " side="right">
+          <SheetHeader className="border-b">
+            <SheetTitle className="flex gap-2 ">
+              <span>Add Menu Items</span>
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-2 p-4">
+            <ProductImageUpload
+              setImageUrlInForm={(url) =>
+                setformData((prev) => ({ ...prev, imageURL: url }))
+              }
+            />
+            <CommonForm
+              onSubmit={onSubmit}
+              formData={formData}
+              setformData={setformData}
+              buttonText={"Add"}
+              formControls={addMenuItemsFormControls}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };

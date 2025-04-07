@@ -3,6 +3,8 @@ const app = express();
 const cors = require("cors");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
+const path = require("path"); // ← Add this line
+
 const cookieParser = require("cookie-parser");
 
 const PORT = process.env.PORT || 8000;
@@ -32,6 +34,8 @@ dotenv.config();
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
