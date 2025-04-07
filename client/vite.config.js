@@ -14,7 +14,7 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(),require("tailwind-scrollbar-hide")],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
