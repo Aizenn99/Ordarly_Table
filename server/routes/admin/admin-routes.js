@@ -1,6 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { addMenu ,fetchAllMenuItems,EditMenuItem,deleteMenuItem} = require("../../controllers/admin/menuItem");
+const {
+  addMenu,
+  fetchAllMenuItems,
+  EditMenuItem,
+  deleteMenuItem,
+} = require("../../controllers/admin/menuItem");
+const {
+  addtable,
+  addSpaces,
+  fetchAllTables,
+  editTable,
+  deleteTable,
+} = require("../../controllers/admin/tables");
 const upload = require("../../controllers/admin/uploadMiddleWare");
 
 router.post("/add-menu", addMenu);
@@ -9,13 +21,23 @@ router.put("/update-menu/:id", EditMenuItem);
 router.delete("/delete-menu/:id", deleteMenuItem);
 
 router.post("/upload-image", upload.single("image"), (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
-    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+  const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${
+    req.file.filename
+  }`;
 
+  res.status(200).json({ message: "File uploaded successfully", imageUrl });
+});
 
-    res.status(200).json({ message: "File uploaded successfully", imageUrl });
-  });
+//table routes for admin section
+router.post("/add-table", addtable);
+router.get("/fetch-tables", fetchAllTables);
+router.put("/update-table/:id", editTable);
+router.delete("/delete-table/:id", deleteTable);
+
+//spaces routes
+router.post("/add-spaces", addSpaces);
 
 module.exports = router;

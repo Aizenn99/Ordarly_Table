@@ -1,12 +1,23 @@
 import React from "react";
-import { MdDashboard, MdOutlineNoFood, MdTableRestaurant } from "react-icons/md";
+import {
+  MdDashboard,
+  MdOutlineNoFood,
+  MdTableRestaurant,
+} from "react-icons/md";
 import { IoReorderThree } from "react-icons/io5";
 import { TbReportSearch } from "react-icons/tb";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
-import { FaLeaf } from "react-icons/fa";
+import { LuPanelRight } from "react-icons/lu";
 
-import { Home, FileText, ShoppingCart, Settings, Users, HelpCircle } from "lucide-react";
+import {
+  Home,
+  FileText,
+  ShoppingCart,
+  Settings,
+  Users,
+  HelpCircle,
+} from "lucide-react";
 
 const AdminSideBarMenuItems = [
   {
@@ -79,7 +90,9 @@ function MenuItems({ setopen }) {
             setopen && setopen(false);
           }}
           className={`flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm ${
-            location.pathname === item.path ? "bg-[#005C3C] text-white" : "text-gray-500 hover:text-black"
+            location.pathname === item.path
+              ? "bg-[#005C3C] text-white"
+              : "text-gray-500 hover:text-black"
           }`}
         >
           {item.icon} <span>{item.label}</span>
@@ -115,8 +128,8 @@ const AdminSideBar = ({ open, setopen }) => {
             onClick={() => navigate("/admin/dashboard")}
             className="text-xl text-primary1 font-semibold gap-2 flex tracking-tighter cursor-pointer"
           >
-          <FaLeaf size={24} />
-            Ordarly Admin
+            <LuPanelRight size={24} /> {/* Icon for the sidebar */}
+            Admin Panel
           </h1>
         </div>
         <MenuItems />

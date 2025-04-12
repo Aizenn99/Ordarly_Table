@@ -20,6 +20,8 @@ import {
   getMenuItem,
   updateMenuItem,
 } from "@/store/admin-slice/menuItem";
+import { toast } from "react-hot-toast";
+
 
 const initialformData = {
   imageURL: null,
@@ -40,7 +42,6 @@ const AdminMenu = () => {
   const { menuItem } = useSelector((state) => state.adminMenuItem);
 
   const dispatch = useDispatch();
-  const toast = useToaster();
 
   function onSubmit() {
     currentEditedId
@@ -214,7 +215,7 @@ const AdminMenu = () => {
               {filteredMenuItem.map((item) => (
                 <div
                   key={item._id}
-                  className="bg-white shadow rounded-xl overflow-hidden relative"
+                  className="bg-white shadow rounded-xl h-[280px]  overflow-hidden relative"
                 >
                   <img
 
@@ -223,13 +224,13 @@ const AdminMenu = () => {
                     className="w-full h-36 object-cover"
                   />
                   <div className="p-3 text-left">
-                    <h3 className="font-semibold text-md text-gray-800">
-                      {item.name}
+                    <h3 className="font-semibold text-md text-gray-800 mb-1">
+                      {item.title}
                     </h3>
                     <p className="text-sm text-gray-500 mb-2">
                       {item.description}
                     </p>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between  items-center">
                       <span className="font-semibold text-sm text-black">
                         ₹ {item.price}
                       </span>
