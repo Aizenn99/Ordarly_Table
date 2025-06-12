@@ -197,8 +197,6 @@ export const AdminmenuItemSlice = createSlice({
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.isLoading = false;
 
-        console.log("Fetched Categories Payload:", action.payload);
-
         const fallback =
           action.payload?.listOfCategories ||
           action.payload?.categories ||
@@ -242,9 +240,12 @@ export const AdminmenuItemSlice = createSlice({
       })
       .addCase(fetchSubCategory.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.subcats = Array.isArray(action.payload?.listOfSubCategories)
-          ? action.payload.listOfSubCategories
-          : [];
+        const fallback =
+          action.payload?.listOfSubCategories ||
+          action.payload?.subcategories ||
+          action.payload?.data?.listOfSubCategories ||
+          [];
+        state.subcats = Array.isArray(fallback) ? fallback : [];
       })
       .addCase(fetchSubCategory.rejected, (state) => {
         state.isLoading = false;

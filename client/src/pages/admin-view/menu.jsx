@@ -21,7 +21,9 @@ import {
   addcategory,
   addMenuItem,
   addSubCategory,
+  deletecategory,
   deleteMenuItem,
+  deleteSubCategory,
   fetchCategories,
   fetchSubCategory,
   getMenuItem,
@@ -117,11 +119,6 @@ const AdminMenu = () => {
 
   const onSubmitSubCategory = (e) => {
     e.preventDefault();
-
-    if (!formData.name || !formData.category) {
-      toast.error("Please provide sub-category name and select a category.");
-      return;
-    }
 
     dispatch(addSubCategory(formData))
       .then((res) => {
@@ -416,7 +413,7 @@ const AdminMenu = () => {
                     <MdDeleteOutline
                       className="text-red-500 cursor-pointer hover:text-red-700"
                       onClick={() => {
-                        dispatch(deleteMenuItem(category._id)).then((res) => {
+                        dispatch(deletecategory(category._id)).then((res) => {
                           const payload = res?.payload;
                           if (payload?.success) {
                             toast.success("Category Deleted Successfully");
@@ -455,6 +452,34 @@ const AdminMenu = () => {
             <SheetTitle>Add Sub-Category</SheetTitle>
           </SheetHeader>
           <div className="p-4 flex flex-col gap-2">
+            <div className="overflow-y-auto max-h-100 mb-10">
+              {subcats && subcats.length > 0 ? (
+                subcats.map((subcat) => (
+                  <div
+                    key={subcat._id}
+                    className="flex items-center justify-between border-b px-2 mb-2 py-1"
+                  >
+                    <span className="text-sm">{subcat.name}</span>
+                    <MdDeleteOutline
+                      className="text-red-500 cursor-pointer hover:text-red-700"
+                      onClick={() => {
+                        dispatch(deleteSubCategory(subcat._id)).then((res) => {
+                          const payload = res?.payload;
+                          if (payload?.success) {
+                            toast.success("Sub-Category Deleted Successfully");
+                            dispatch(fetchSubCategory());
+                          } else {
+                            toast.error(payload?.message || "Failed to delete");
+                          }
+                        });
+                      }}
+                    />
+                  </div>
+                ))
+              ) : (
+                <p>No sub-categories available.</p>
+              )}
+            </div>
             <CommonForm
               onSubmit={onSubmitSubCategory}
               formData={formData}
