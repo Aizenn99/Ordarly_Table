@@ -26,7 +26,7 @@ const AdminNavbar = ({ setOpen }) => {
   }
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-background border-b">
+    <header className="flex items-center bg-white justify-between px-4 py-3  border-b">
       {/* Logo */}
       <div className="text-primary1 flex items-center gap-2">
         <FaLeaf size={24} />

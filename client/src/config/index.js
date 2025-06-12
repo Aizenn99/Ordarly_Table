@@ -58,11 +58,7 @@ export const addMenuItemsFormControls = [
     name: "category",
     componentType: "select",
     options: [
-      { id: "1", label: "Veg" },
-      { id: "2", label: "Non-Veg" },
-      { id: "3", label: "Dessert" },
-      { id: "4", label: "Beverages" },
-      { id: "5", label: "Salads" },
+     
     ],
   },
   {
@@ -70,10 +66,7 @@ export const addMenuItemsFormControls = [
     name: "subcategory",
     componentType: "select",
     options: [
-      { id: "1", label: "Starters" },
-      { id: "2", label: "Main Course" },
-      { id: "3", label: "Snacks" },
-      { id: "4", label: "Soups" },
+      
     ],
   },
   {
@@ -83,6 +76,26 @@ export const addMenuItemsFormControls = [
     type: "number",
     placeholder: "Enter product price",
   },
+];
+
+export const addCategoryFormControls = [
+  {
+    label: "Category Name",
+    name: "name",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter category name",
+  }
+];
+
+export const addSubCategoryFormControls = [
+  {
+    label: "Subcategory Name",
+    name: "name",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter subcategory name",
+  }
 ];
 
 export const addTableFormControls = [
@@ -115,20 +128,20 @@ export const addTableFormControls = [
     name: "spaces",
     componentType: "select",
     options: [
-      { id: "1", label: "1st Floor" },
-      { id: "2", label: "2nd Floor" },
-      { id: "3", label: "VIP" },
+      
     ],
   },
 ];
 
 
+
 export const addSpacesFormControls = [
   {
-    label: "Spaces",
-    name: "spaces",
+    
+    label: "SpaceName",
+    name: "SpaceName",
     componentType: "input",
     type: "text",
-    placeholder: "Enter spaces name",
+    placeholder: "Enter space name",
   }
 ];

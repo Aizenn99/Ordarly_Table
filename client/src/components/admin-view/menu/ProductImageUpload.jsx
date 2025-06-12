@@ -5,40 +5,47 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { FileIcon, UploadCloudIcon, XIcon } from 'lucide-react'
 import uploadImage from '@/store/admin-slice/imageupload'
+import { toast } from 'react-hot-toast'
 
 const ProductImageUpload = ({ setImageUrlInForm }) => {
-    const [imageFile, setImageFile] = useState(null)
-    const [imageUrl, setImageUrl] = useState(null)
-    const [imageLoadingState, setImageLoadingState] = useState(false)
-    const [isEditMode, setIsEditMode] = useState(false)
-    const inputRef = useRef(null)
-  
-    const handleImageFileChange = async (e) => {
-      const file = e.target.files?.[0]
-      if (file) {
-        setImageFile(file)
-        setImageLoadingState(true)
-        try {
-          const uploadedUrl = await uploadImage(file)
-          setImageUrl(uploadedUrl)
-          setImageUrlInForm(uploadedUrl) // 👉 pass to parent
-        } catch (err) {
-          console.error('Upload failed:', err)
-        } finally {
-          setImageLoadingState(false)
-        }
+  const [imageFile, setImageFile] = useState(null)
+  const [imageUrl, setImageUrl] = useState(null)
+  const [imageLoadingState, setImageLoadingState] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const inputRef = useRef(null)
+
+  const handleImageFileChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      setImageLoadingState(true)
+      try {
+        const uploadedUrl = await uploadImage(file)
+        setImageUrl(uploadedUrl)
+        setImageUrlInForm(uploadedUrl)
+        toast.success("Image uploaded successfully!")
+      } catch (err) {
+        console.error('Upload failed:', err)
+        toast.error("Failed! Please use a different image.")
+        setImageFile(null)
+        setImageUrl(null)
+        setImageUrlInForm(null)
+        if (inputRef.current) inputRef.current.value = ''
+      } finally {
+        setImageLoadingState(false)
       }
     }
-  
-    const handleRemoveImage = () => {
-      setImageFile(null)
-      setImageUrl(null)
-      setImageUrlInForm(null) // reset in parent
-      if (inputRef.current) {
-        inputRef.current.value = ''
-      }
+  }
+
+  const handleRemoveImage = () => {
+    setImageFile(null)
+    setImageUrl(null)
+    setImageUrlInForm(null)
+    if (inputRef.current) {
+      inputRef.current.value = ''
     }
-  
+  }
+
   const handleDragOver = (e) => {
     e.preventDefault()
   }
@@ -52,8 +59,15 @@ const ProductImageUpload = ({ setImageUrlInForm }) => {
       try {
         const uploadedUrl = await uploadImage(file)
         setImageUrl(uploadedUrl)
+        setImageUrlInForm(uploadedUrl)
+        toast.success("Image uploaded successfully! ")
       } catch (err) {
         console.error('Upload failed:', err)
+        toast.error("Failed! Please use a different image.")
+        setImageFile(null)
+        setImageUrl(null)
+        setImageUrlInForm(null)
+        if (inputRef.current) inputRef.current.value = ''
       } finally {
         setImageLoadingState(false)
       }
@@ -110,8 +124,6 @@ const ProductImageUpload = ({ setImageUrlInForm }) => {
           </div>
         )}
       </div>
-
-     
     </div>
   )
 }

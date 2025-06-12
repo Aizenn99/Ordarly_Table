@@ -21,6 +21,11 @@ import AdminSettings from "./pages/admin-view/settings";
 import AdminReports from "./pages/admin-view/reports";
 import AdminUpdate from "./pages/admin-view/update-help";
 import AdminUser from "./pages/admin-view/user-access";
+import StaffHome from "./pages/staff-view/home";
+import StaffLayout from "./components/staff-view/layout";
+import StaffTable from "./pages/staff-view/table";
+import StaffMenu from "./pages/staff-view/menu";
+import StaffBill from "./pages/staff-view/Bill";
 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
@@ -33,12 +38,16 @@ function App() {
   }, [dispatch]);
 
   if (isLoading) {
-    return <div><Loader /></div>;
+    return (
+      <div>
+        <Loader />
+      </div>
+    );
   }
 
   return (
     <div>
-    <Toaster />
+      <Toaster />
       <Routes>
         <Route path="/" element={<Navigate to="/auth/login" replace />} />
 
@@ -63,15 +72,14 @@ function App() {
           }
         >
           <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="orders" element={<AdminOrders/>} />
-          <Route path="menu" element={<AdminMenu/>} />
-          <Route path="table-qr" element={<AdminTableQR/>} />
-          <Route path="bills" element={<AdminBills/>} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="menu" element={<AdminMenu />} />
+          <Route path="table-qr" element={<AdminTableQR />} />
+          <Route path="bills" element={<AdminBills />} />
           <Route path="settings" element={<AdminSettings />} />
-          <Route path="reports" element={<AdminReports/>}/>
-          <Route path="update-help" element={<AdminUpdate/>}/>
-          <Route path="user-access" element={<AdminUser />}/>
-
+          <Route path="reports" element={<AdminReports />} />
+          <Route path="update-help" element={<AdminUpdate />} />
+          <Route path="user-access" element={<AdminUser />} />
         </Route>
 
         <Route
@@ -89,10 +97,16 @@ function App() {
         <Route
           path="/staff"
           element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}> 
+            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+              <StaffLayout />
             </CheckAuth>
           }
-        ></Route>
+        >
+          <Route path="home" element={<StaffHome />} />
+          <Route path="table" element={<StaffTable/>} />
+          <Route path="menu" element={<StaffMenu />} />
+          <Route path="bills" element={<StaffBill />} />
+        </Route>
       </Routes>
     </div>
   );

@@ -5,6 +5,12 @@ const {
   fetchAllMenuItems,
   EditMenuItem,
   deleteMenuItem,
+  addCategory,
+  addSubCategory,
+  fetchAllCategories,
+  fetchAllSubCategories,
+  deleteCategory,
+  deleteSubCategory,
 } = require("../../controllers/admin/menuItem");
 const {
   addtable,
@@ -12,6 +18,7 @@ const {
   fetchAllTables,
   editTable,
   deleteTable,
+  fetchSpaces,
 } = require("../../controllers/admin/tables");
 const upload = require("../../controllers/admin/uploadMiddleWare");
 
@@ -20,6 +27,18 @@ router.get("/fetch-menu", fetchAllMenuItems);
 router.put("/update-menu/:id", EditMenuItem);
 router.delete("/delete-menu/:id", deleteMenuItem);
 
+//category routes
+router.post("/add-category", addCategory);
+router.get("/fetch-categories", fetchAllCategories);
+router.delete("/delete-category/:id", deleteCategory);
+
+//subcategory routes
+router.post("/add-subcategory", addSubCategory);
+router.get("/fetch-subcategories", fetchAllSubCategories);
+router.delete("/delete-subcategory/:id", deleteSubCategory);
+
+
+// Image upload route
 router.post("/upload-image", upload.single("image"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
@@ -39,5 +58,6 @@ router.delete("/delete-table/:id", deleteTable);
 
 //spaces routes
 router.post("/add-spaces", addSpaces);
+router.get("/fetch-spaces", fetchSpaces);
 
 module.exports = router;

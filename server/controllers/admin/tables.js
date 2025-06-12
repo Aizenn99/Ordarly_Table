@@ -106,4 +106,27 @@ const addSpaces = async (req, res) => {
   }
 };
 
-module.exports = { addtable, addSpaces, fetchAllTables , editTable, deleteTable};
+const fetchSpaces = async (req, res) => {
+  try {
+    const data = await spacesModel.find();
+    res.status(200).json({
+      success: true,
+      message: "Spaces fetched successfully!",
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching spaces",
+    });
+  }
+};
+
+module.exports = {
+  addtable,
+  addSpaces,
+  fetchSpaces,
+  fetchAllTables,
+  editTable,
+  deleteTable,
+};

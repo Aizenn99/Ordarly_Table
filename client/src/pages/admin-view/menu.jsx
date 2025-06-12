@@ -2,7 +2,7 @@ import InfoCard from "@/components/admin-view/menu/InfoCard";
 import React, { useEffect, useState } from "react";
 import { IoFastFoodOutline } from "react-icons/io5";
 import { CiCircleList } from "react-icons/ci";
-import { MdFilterList } from "react-icons/md";
+import { MdDeleteOutline, MdFilterList } from "react-icons/md";
 import {
   Sheet,
   SheetContent,
@@ -11,17 +11,25 @@ import {
 } from "@/components/ui/sheet";
 import ProductImageUpload from "@/components/admin-view/menu/ProductImageUpload";
 import CommonForm from "@/components/common/form";
-import { addMenuItemsFormControls } from "@/config";
-import { useDispatch, useSelector } from "react-redux";
-import { useToaster } from "react-hot-toast";
 import {
+  addCategoryFormControls,
+  addMenuItemsFormControls,
+  addSubCategoryFormControls,
+} from "@/config";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  addcategory,
   addMenuItem,
+  addSubCategory,
   deleteMenuItem,
+  fetchCategories,
+  fetchSubCategory,
   getMenuItem,
   updateMenuItem,
 } from "@/store/admin-slice/menuItem";
 import { toast } from "react-hot-toast";
-
+import { Emoji } from "emoji-picker-react";
+import EmojiPickerPopup from "@/components/admin-view/menu/EmojiPicker";
 
 const initialformData = {
   imageURL: null,
@@ -37,94 +45,169 @@ const AdminMenu = () => {
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [open, setOpen] = useState(false);
   const [openMenu, setopenMenu] = useState(false);
+  const [openCategory, setopenCategory] = useState(false);
+  const [openSubCategory, setopenSubCategory] = useState(false);
   const [formData, setformData] = useState(initialformData);
   const [currentEditedId, setCurrentEditedId] = useState(null);
-  const { menuItem } = useSelector((state) => state.adminMenuItem);
 
   const dispatch = useDispatch();
-
-  function onSubmit() {
-    currentEditedId
-      ? dispatch(updateMenuItem({ formData, id: currentEditedId })).then(
-          (res) => {
-            if (res.payload.success) {
-              toast.success("Menu Item Updated Successfully");
-              setopenMenu(false);
-            } else {
-              toast.error(res.payload.message);
-            }
-          }
-        )
-      : dispatch(
-          addMenuItem({
-            ...formData,
-            imageURL: formData.imageURL,
-            title: formData.title,
-            description: formData.description,
-            category: formData.category,
-            subcategory: formData.subcategory,
-            price: formData.price,
-          })
-        ).then((res) => {
-          if (res.payload.success) {
-            toast.success("Menu Item Added Successfully");
-            setopenMenu(false);
-          } else {
-            toast.error(res.payload.message);
-          }
-        });
-  }
-
-  function handledelete(getcurrentMenuId) {
-    dispatch(deleteMenuItem(getcurrentMenuId)).then((res) => {
-      if (res.payload.success) {
-        toast.success("Menu Item Deleted Successfully");
-      } else {
-        toast.error(res.payload.message);
-      }
-    });
-  }
+  const { menuItem, menucategoris, subcats } = useSelector(
+    (state) => state.adminMenuItem
+  );
 
   useEffect(() => {
+    dispatch(fetchCategories());
+    dispatch(fetchSubCategory());
     dispatch(getMenuItem());
   }, [dispatch]);
-
-  const SubCategorys = [
-    { id: "1", name: "Starters" },
-    { id: "2", name: "Main Course" },
-    { id: "3", name: "Snacks" },
-    { id: "4", name: "Soups" },
-  ];
-
-  const Categorys = [
-    { id: "1", name: "Veg" },
-    { id: "2", name: "Non-Veg" },
-    { id: "3", name: "Dessert" },
-    { id: "4", name: "Beverages" },
-    { id: "5", name: "Salads" },
-  ];
 
   useEffect(() => {
     if (!openMenu) {
       setformData(initialformData);
+      setCurrentEditedId(null);
     }
   }, [openMenu]);
 
-  const filteredMenuItem = menuItem.filter((item) => {
-    const categoryMatch = selectedCategory
-      ? item.category === selectedCategory
-      : true;
-    const subCatMatch = selectedSubCategory
-      ? item.subcategory === selectedSubCategory
-      : true;
-    return categoryMatch && subCatMatch;
-  });
+  const onSubmit = (e) => {
+    e.preventDefault();
+    const action = currentEditedId
+      ? updateMenuItem({ formdata: formData, id: currentEditedId })
+      : addMenuItem(formData);
+
+    dispatch(action)
+      .then((res) => {
+        const payload = res?.payload;
+        if (payload?.success) {
+          toast.success(currentEditedId ? "Menu Updated" : "Menu Item Added");
+          dispatch(getMenuItem());
+          setTimeout(() => setopenMenu(false), 300);
+        } else {
+          toast.error(payload?.message || "Something went wrong");
+        }
+      })
+      .catch(() => toast.error("Something went wrong. Please try again."));
+  };
+
+  //add category submit
+
+  const onSubmitCategory = (e) => {
+    e.preventDefault();
+
+    if (!formData.name || !formData.icon) {
+      toast.error("Please provide category name and icon.");
+      return;
+    }
+
+    dispatch(addcategory(formData))
+      .then((res) => {
+        const payload = res?.payload;
+        if (payload?.success) {
+          toast.success("Category Added Successfully");
+          dispatch(fetchCategories());
+          setformData(initialformData);
+          setTimeout(() => setopenCategory(false), 300);
+        } else {
+          toast.error(payload?.message || "Failed to add category");
+        }
+      })
+      .catch(() => toast.error("Something went wrong. Please try again."));
+  };
+
+  //add sub category submit
+
+  const onSubmitSubCategory = (e) => {
+    e.preventDefault();
+
+    if (!formData.name || !formData.category) {
+      toast.error("Please provide sub-category name and select a category.");
+      return;
+    }
+
+    dispatch(addSubCategory(formData))
+      .then((res) => {
+        const payload = res?.payload;
+        if (payload?.success) {
+          toast.success("Sub-Category Added Successfully");
+          dispatch(fetchSubCategory());
+          setformData(initialformData);
+          setTimeout(() => setopenSubCategory(false), 300);
+        } else {
+          toast.error(payload?.message || "Failed to add sub-category");
+        }
+      })
+      .catch(() => toast.error("Something went wrong. Please try again."));
+  };
+
+  const handledelete = (id) => {
+    dispatch(deleteMenuItem(id)).then((res) => {
+      const payload = res?.payload;
+      if (payload?.success) {
+        toast.success("Menu Item Deleted Successfully");
+        dispatch(getMenuItem());
+      } else {
+        toast.error(payload?.message || "Failed to delete");
+      }
+    });
+  };
+
+  const handlechange = (field, value) => {
+    setformData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const generateDynamicMenuFormControls = () => {
+    return addMenuItemsFormControls.map((control) => {
+      if (control.name === "category") {
+        return {
+          ...control,
+          options: menucategoris.map((cat) => ({
+            id: cat._id,
+            label: (
+              <div className="flex items-center gap-2">
+                {cat.icon && <Emoji unified={cat.icon} size={18} />}
+                <span>{cat.name}</span>
+              </div>
+            ),
+            value: cat._id,
+          })),
+        };
+      }
+
+      if (control.name === "subcategory") {
+        return {
+          ...control,
+          options: subcats.map((sub) => ({
+            id: sub._id,
+            label: sub.name,
+            value: sub._id,
+          })),
+        };
+      }
+
+      return control;
+    });
+  };
+
+  const filteredMenuItem = Array.isArray(menuItem)
+    ? menuItem.filter((item) => {
+        const categoryMatch = selectedCategory
+          ? menucategoris.find((c) => c._id === item.category)?.name ===
+            selectedCategory
+          : true;
+
+        const subCatMatch = selectedSubCategory
+          ? subcats.find((s) => s._id === item.subcategory)?.name ===
+            selectedSubCategory
+          : true;
+
+        return categoryMatch && subCatMatch;
+      })
+    : [];
 
   return (
     <>
-      <div className="w-full h-full bg-[#E3F4F4] rounded-2xl p-4">
-        {/* TOP CARDS */}
-        <div className="w-full gap-3 justify-between grid md:grid-cols-3 grid-cols-1">
+      <div className="h-full bg-[#E3F4F4] rounded-2xl p-3">
+        {/* Info Cards */}
+        <div className="grid md:grid-cols-3 grid-cols-1 gap-3">
           <InfoCard
             icon={<IoFastFoodOutline />}
             color="bg-primary1"
@@ -134,66 +217,62 @@ const AdminMenu = () => {
           <InfoCard
             icon={<CiCircleList />}
             color="bg-primary1"
-            value={Categorys.length}
+            value={menucategoris.length}
             label="Total Category"
           />
           <InfoCard
             icon={<MdFilterList />}
             color="bg-primary1"
-            value={SubCategorys.length}
+            value={subcats.length}
             label="Total Sub-Category"
           />
         </div>
 
-        {/* CATEGORY AND SUBCATEGORY FILTERS */}
-        <div className="flex flex-col lg:flex-row justify-between gap-4 mt-10">
-          {/* CATEGORY SIDEBAR */}
-          <div className="w-full lg:w-36 md:w-40 bg-white p-4 rounded-lg max-h-[400px] overflow-y-scroll h-[160px] scrollbar-hide">
-            <h2 className="font-semibold mb-2 text-md text-center">
-              Categories
-            </h2>
-            <div className="flex flex-col gap-2">
-              {Categorys.map((cat) => (
+        {/* Filters */}
+        <div className="flex flex-col bg-white rounded-2xl p-3 gap-2 mt-10">
+          <div className="w-full overflow-x-auto max-w-[360px] sm:max-w-full">
+            <h2 className="font-semibold text-md mb-3">Categories</h2>
+            <div className="flex gap-3 px-2 pb-2 w-max">
+              {menucategoris.map((cat) => (
                 <button
-                  key={cat.id}
+                  key={cat._id}
                   onClick={() =>
                     setSelectedCategory(
                       cat.name === selectedCategory ? null : cat.name
                     )
                   }
-                  className={`px-2 py-1 rounded-md text-sm transition ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm shadow transition whitespace-nowrap ${
                     selectedCategory === cat.name
                       ? "bg-primary1 text-white"
-                      : "bg-[#E3F4F4] hover:bg-primary1 hover:text-white"
+                      : "bg-[#E3F4F4] text-black"
                   }`}
                 >
-                  {cat.name}
+                  {cat.icon ? (
+                    <img src={cat.icon} alt={cat.name} className="w-5 h-5" />
+                  ) : (
+                    <LuUtensils className="w-5 h-5" />
+                  )}
+                  <span>{cat.name}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* SUBCATEGORY SCROLL */}
-          <div className="md:w-full bg-white w-[350px] overflow-x-scroll  p-4 rounded-lg">
-            <h2 className="font-semibold  text-xl mb-4">Sub Categories</h2>
-            <div className="flex gap-4 overflow-x-auto">
-              {SubCategorys.length === 0 && (
-                <p className="text-sm text-gray-500">
-                  No subcategories available.
-                </p>
-              )}
-              {SubCategorys.map((sub) => (
+          <div className="w-full overflow-x-auto max-w-[360px] sm:max-w-full">
+            <h2 className="font-semibold text-md mb-2">Sub Categories</h2>
+            <div className="flex gap-3 px-2 pb-2 w-max">
+              {subcats.map((sub) => (
                 <button
-                  key={sub.id}
+                  key={sub._id}
                   onClick={() =>
                     setSelectedSubCategory(
                       sub.name === selectedSubCategory ? null : sub.name
                     )
                   }
-                  className={`min-w-[150px] whitespace-nowrap px-4 py-2 border rounded-lg transition shadow ${
+                  className={`px-4 py-2 rounded-lg text-sm shadow transition whitespace-nowrap border ${
                     selectedSubCategory === sub.name
                       ? "bg-primary1 text-white border-primary1"
-                      : "bg-[#E3F4F4] text-primary1 border-primary1 hover:bg-primary1 hover:text-white"
+                      : "bg-[#E3F4F4] text-primary1 border-primary1"
                   }`}
                 >
                   {sub.name}
@@ -203,7 +282,7 @@ const AdminMenu = () => {
           </div>
         </div>
 
-        {/* FILTERED MENU ITEMS */}
+        {/* Menu Items */}
         <div className="mt-8 bg-white p-4 rounded-xl">
           <h2 className="font-semibold text-xl mb-4">Menu Items</h2>
           {filteredMenuItem.length === 0 ? (
@@ -215,27 +294,29 @@ const AdminMenu = () => {
               {filteredMenuItem.map((item) => (
                 <div
                   key={item._id}
-                  className="bg-white shadow rounded-xl h-[280px]  overflow-hidden relative"
+                  className="bg-white shadow rounded-xl h-[280px] overflow-hidden relative"
                 >
                   <img
-
-                    src={item.imageURL || ""}
-                    alt={item.title}
+                    src={item.imageURL || "/placeholder.png"}
+                    alt={item.title || "Item"}
                     className="w-full h-36 object-cover"
                   />
-                  <div className="p-3 text-left">
+                  <div className="p-3">
                     <h3 className="font-semibold text-md text-gray-800 mb-1">
                       {item.title}
                     </h3>
                     <p className="text-sm text-gray-500 mb-2">
                       {item.description}
                     </p>
-                    <div className="flex justify-between  items-center">
+                    <div className="flex justify-between items-center">
                       <span className="font-semibold text-sm text-black">
                         ₹ {item.price}
                       </span>
-                      <button className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm">
-                        Edit
+                      <button
+                        className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm"
+                        onClick={() => handledelete(item._id)}
+                      >
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -246,52 +327,50 @@ const AdminMenu = () => {
         </div>
       </div>
 
-      {/* ➕ FLOATING ADD BUTTON */}
+      {/* Floating Add Button */}
       <Sheet onOpenChange={setOpen} open={open}>
         <button
           onClick={() => setOpen(true)}
-          type="button"
-          className="fixed bottom-8 right-14 cursor-pointer z-50 bg-primary1 w-16 h-16 text-3xl text-white rounded-full shadow-lg flex items-center justify-center"
+          className="fixed bottom-6 right-6 z-50 bg-primary1 text-white rounded-full w-14 h-14 text-3xl shadow-lg"
           title="Add New Item"
         >
           +
         </button>
+
         <SheetContent className="w-96" side="right">
           <SheetHeader className="border-b">
-            <SheetTitle className="flex gap-2 mb-6">
-              <span>Add Options</span>
-            </SheetTitle>
+            <SheetTitle className="mb-6">Add Options</SheetTitle>
           </SheetHeader>
           <div className="p-4 flex flex-col gap-2">
             <div
               onClick={() => setopenMenu(true)}
               className="card bg-[#E3F4F4] text-primary1 flex items-center justify-center cursor-pointer p-4 rounded-lg"
             >
-              <span className="text-lg font-semibold ">Add Menu Items</span>
+              <span className="text-lg font-semibold">Add Menu Items</span>
             </div>
-            <div className="card bg-[#E3F4F4] text-primary1 flex items-center justify-center cursor-pointer p-4 rounded-lg">
-              <span className="text-lg font-semibold ">Add Category</span>
+            <div
+              onClick={() => setopenCategory(true)}
+              className="card bg-[#E3F4F4] text-primary1 flex items-center justify-center cursor-pointer p-4 rounded-lg"
+            >
+              <span className="text-lg font-semibold">Add Category</span>
             </div>
-            <div className="card bg-[#E3F4F4] text-primary1 flex items-center justify-center cursor-pointer p-4 rounded-lg">
-              <span className="text-lg font-semibold ">Add Sub-Category</span>
+            <div
+              onClick={() => setopenSubCategory(true)}
+              className="card bg-[#E3F4F4] text-primary1 flex items-center justify-center cursor-pointer p-4 rounded-lg"
+            >
+              <span className="text-lg font-semibold">Add Sub-Category</span>
             </div>
           </div>
         </SheetContent>
       </Sheet>
 
-      {/* SEPARATE SHEET FOR ADD MENU ITEMS */}
-      <Sheet
-        onOpenChange={setopenMenu}
-        open={openMenu}
-        setformData={initialformData}
-      >
-        <SheetContent className="w-96 overflow-y-scroll " side="right">
+      {/* Add Menu Item Sheet */}
+      <Sheet onOpenChange={setopenMenu} open={openMenu}>
+        <SheetContent className="w-96 overflow-y-scroll" side="right">
           <SheetHeader className="border-b">
-            <SheetTitle className="flex gap-2 ">
-              <span>Add Menu Items</span>
-            </SheetTitle>
+            <SheetTitle>Add Menu Items</SheetTitle>
           </SheetHeader>
-          <div className="flex flex-col gap-2 p-4">
+          <div className="p-4 flex flex-col gap-2">
             <ProductImageUpload
               setImageUrlInForm={(url) =>
                 setformData((prev) => ({ ...prev, imageURL: url }))
@@ -302,7 +381,86 @@ const AdminMenu = () => {
               formData={formData}
               setformData={setformData}
               buttonText={"Add"}
-              formControls={addMenuItemsFormControls}
+              formControls={generateDynamicMenuFormControls()}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Add Category Sheet */}
+      <Sheet onOpenChange={setopenCategory} open={openCategory}>
+        <SheetContent className="w-96 overflow-y-scroll" side="right">
+          <SheetHeader className="border-b">
+            <SheetTitle>Add Category</SheetTitle>
+          </SheetHeader>
+          <div className="p-4 flex flex-col gap-2">
+            <div className="overflow-y-auto max-h-100 mb-10">
+              {menucategoris && menucategoris.length > 0 ? (
+                menucategoris.map((category) => (
+                  <div
+                    key={category._id}
+                    className="flex items-center justify-between border-b px-2 mb-2 py-1"
+                  >
+                    <span className="text-sm flex items-center gap-2">
+                      {category.icon ? (
+                        <img
+                          src={category.icon}
+                          alt={category.name}
+                          className="w-6 h-6"
+                        />
+                      ) : (
+                        <LuUtensils />
+                      )}
+                      {category.name}
+                    </span>
+                    <MdDeleteOutline
+                      className="text-red-500 cursor-pointer hover:text-red-700"
+                      onClick={() => {
+                        dispatch(deleteMenuItem(category._id)).then((res) => {
+                          const payload = res?.payload;
+                          if (payload?.success) {
+                            toast.success("Category Deleted Successfully");
+                            dispatch(fetchCategories());
+                          } else {
+                            toast.error(payload?.message || "Failed to delete");
+                          }
+                        });
+                      }}
+                    />
+                  </div>
+                ))
+              ) : (
+                <p>No categories available.</p>
+              )}
+            </div>
+            <EmojiPickerPopup
+              icon={formData.icon}
+              onSelect={(selectedIcon) => handlechange("icon", selectedIcon)}
+            />
+            <CommonForm
+              onSubmit={onSubmitCategory}
+              formData={formData}
+              setformData={setformData}
+              buttonText={"Add Category"}
+              formControls={addCategoryFormControls}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Add Sub-Category Sheet */}
+      <Sheet onOpenChange={setopenSubCategory} open={openSubCategory}>
+        <SheetContent className="w-96 overflow-y-scroll" side="right">
+          <SheetHeader className="border-b">
+            <SheetTitle>Add Sub-Category</SheetTitle>
+          </SheetHeader>
+          <div className="p-4 flex flex-col gap-2">
+            <CommonForm
+              onSubmit={onSubmitSubCategory}
+              formData={formData}
+              setformData={setformData}
+              buttonText={"Add Sub-Category"}
+              formControls={addSubCategoryFormControls}
             />
           </div>
         </SheetContent>

@@ -5,6 +5,8 @@ const spacesSchema = new mongoose.Schema({
     SpaceName: {
         type: String,
         required: true,
+        trim : true,
+        unique: true
     },
 })
 

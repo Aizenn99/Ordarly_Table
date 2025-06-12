@@ -5,23 +5,34 @@ import axios from "axios";
 const initialState = {
   isLoading: false,
   tables: [],
+  spaces: [], // Assuming you want to store spaces in the same state
+  error: null,
 };
 
 // ✅ Get Tables
 export const getTable = createAsyncThunk("admin/get-table", async () => {
-  const result = await axios.get("http://localhost:8000/api/admin/fetch-tables", {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  const result = await axios.get(
+    "http://localhost:8000/api/admin/fetch-tables",
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
   return result.data.data; // return only the array of tables
 });
 
 // ✅ Add Table
-export const addTable = createAsyncThunk("admin/add-table", async (formData) => {
-  const result = await axios.post("http://localhost:8000/api/admin/add-table", formData);
-  return result.data; // full payload
-});
+export const addTable = createAsyncThunk(
+  "admin/add-table",
+  async (formData) => {
+    const result = await axios.post(
+      "http://localhost:8000/api/admin/add-table",
+      formData
+    );
+    return result.data; // full payload
+  }
+);
 
 // ✅ Update Table
 export const updateTable = createAsyncThunk(
@@ -41,19 +52,44 @@ export const updateTable = createAsyncThunk(
 );
 
 // ✅ Delete Table
-export const deleteTable = createAsyncThunk("admin/delete-table", async (id) => {
-  const result = await axios.delete(`http://localhost:8000/api/admin/delete-table/${id}`, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  return result.data; // deleted table info
-});
+export const deleteTable = createAsyncThunk(
+  "admin/delete-table",
+  async (id) => {
+    const result = await axios.delete(
+      `http://localhost:8000/api/admin/delete-table/${id}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return result.data; // deleted table info
+  }
+);
 
 // ✅ Add Spaces
-export const addSpaces = createAsyncThunk("admin/add-spaces", async (formdata) => {
-  const result = await axios.post("http://localhost:8000/api/admin/add-spaces", formdata);
-  return result.data;
+export const addSpaces = createAsyncThunk(
+  "admin/add-spaces",
+  async (formdata) => {
+    const result = await axios.post(
+      "http://localhost:8000/api/admin/add-spaces",
+      formdata
+    );
+    return result.data;
+  }
+);
+
+// ✅ Fetch Spaces
+export const fetchSpaces = createAsyncThunk("admin/fetch-spaces", async () => {
+  const result = await axios.get(
+    "http://localhost:8000/api/admin/fetch-spaces",
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  return result.data; // return the array of spaces
 });
 
 // ✅ Slice
@@ -119,11 +155,22 @@ export const tableSlice = createSlice({
       .addCase(addSpaces.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(addSpaces.fulfilled, (state) => {
+      .addCase(addSpaces.fulfilled, (state, action) => {
         state.isLoading = false;
-        // You can add logic here to store spaces if needed
+        state.spaces.push(action.payload.data);
       })
+
       .addCase(addSpaces.rejected, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(fetchSpaces.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchSpaces.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.spaces = action.payload.data; // Store fetched spaces
+      })
+      .addCase(fetchSpaces.rejected, (state) => {
         state.isLoading = false;
       });
   },

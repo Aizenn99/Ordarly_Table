@@ -4,15 +4,18 @@ import axios from "axios";
 const initialState = {
   isLoading: false,
   menuItem: [],
+  menucategoris: [],
+  subcats: [],
 };
+
+// ===== Menu Items =====
 
 export const addMenuItem = createAsyncThunk(
   "admin/add-menu-item",
   async (formdata) => {
     const result = await axios.post(
       "http://localhost:8000/api/admin/add-menu",
-      formdata,
-      
+      formdata
     );
     return result?.data;
   }
@@ -20,11 +23,8 @@ export const addMenuItem = createAsyncThunk(
 
 export const getMenuItem = createAsyncThunk("admin/get-menu-item", async () => {
   const result = await axios.get("http://localhost:8000/api/admin/fetch-menu", {
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
   });
-  
   return result?.data;
 });
 
@@ -33,11 +33,7 @@ export const deleteMenuItem = createAsyncThunk(
   async (id) => {
     const result = await axios.delete(
       `http://localhost:8000/api/admin/delete-menu/${id}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      { headers: { "Content-Type": "application/json" } }
     );
     return result?.data;
   }
@@ -49,15 +45,83 @@ export const updateMenuItem = createAsyncThunk(
     const result = await axios.put(
       `http://localhost:8000/api/admin/update-menu/${id}`,
       formdata,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
+      { headers: { "Content-Type": "multipart/form-data" } }
     );
     return result?.data;
   }
 );
+
+// ===== Categories =====
+
+export const addcategory = createAsyncThunk(
+  "admin/add-category",
+  async (formdata) => {
+    const result = await axios.post(
+      "http://localhost:8000/api/admin/add-category",
+      formdata
+    );
+    return result?.data;
+  }
+);
+
+export const fetchCategories = createAsyncThunk(
+  "admin/fetch-categories",
+  async () => {
+    const result = await axios.get(
+      "http://localhost:8000/api/admin/fetch-categories",
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return result?.data;
+  }
+);
+
+export const deletecategory = createAsyncThunk(
+  "admin/delete-category",
+  async (id) => {
+    const result = await axios.delete(
+      `http://localhost:8000/api/admin/delete-category/${id}`,
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return result?.data;
+  }
+);
+
+// ===== Subcategories =====
+
+export const addSubCategory = createAsyncThunk(
+  "admin/add-subcategory",
+  async (formdata) => {
+    const result = await axios.post(
+      "http://localhost:8000/api/admin/add-subcategory",
+      formdata
+    );
+    return result?.data;
+  }
+);
+
+export const fetchSubCategory = createAsyncThunk(
+  "admin/fetch-subcategory",
+  async () => {
+    const result = await axios.get(
+      "http://localhost:8000/api/admin/fetch-subcategories",
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return result?.data;
+  }
+);
+
+export const deleteSubCategory = createAsyncThunk(
+  "admin/delete-subcategory",
+  async (id) => {
+    const result = await axios.delete(
+      `http://localhost:8000/api/admin/delete-subcategory/${id}`,
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return result?.data;
+  }
+);
+
+// ===== Slice =====
 
 export const AdminmenuItemSlice = createSlice({
   name: "adminMenuItem",
@@ -65,12 +129,15 @@ export const AdminmenuItemSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Menu Items
       .addCase(addMenuItem.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(addMenuItem.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.menuItem = action.payload.listOfMenuItems;
+        state.menuItem = Array.isArray(action.payload?.listOfMenuItems)
+          ? action.payload.listOfMenuItems
+          : [];
       })
       .addCase(addMenuItem.rejected, (state) => {
         state.isLoading = false;
@@ -80,7 +147,9 @@ export const AdminmenuItemSlice = createSlice({
       })
       .addCase(getMenuItem.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.menuItem = action.payload.listOfMenuItems;
+        state.menuItem = Array.isArray(action.payload?.listOfMenuItems)
+          ? action.payload.listOfMenuItems
+          : [];
       })
       .addCase(getMenuItem.rejected, (state) => {
         state.isLoading = false;
@@ -91,7 +160,7 @@ export const AdminmenuItemSlice = createSlice({
       })
       .addCase(deleteMenuItem.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.menuItem = action.payload;
+        state.menuItem = action.payload.listOfMenuItems || [];
       })
       .addCase(deleteMenuItem.rejected, (state) => {
         state.isLoading = false;
@@ -101,9 +170,96 @@ export const AdminmenuItemSlice = createSlice({
       })
       .addCase(updateMenuItem.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.menuItem = action.payload;
+        state.menuItem = Array.isArray(action.payload?.listOfMenuItems)
+          ? action.payload.listOfMenuItems
+          : [];
       })
       .addCase(updateMenuItem.rejected, (state) => {
+        state.isLoading = false;
+      })
+
+      // Categories
+      .addCase(addcategory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(addcategory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.menucategoris = Array.isArray(action.payload?.listOfCategories)
+          ? action.payload.listOfCategories
+          : [];
+      })
+      .addCase(addcategory.rejected, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(fetchCategories.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchCategories.fulfilled, (state, action) => {
+        state.isLoading = false;
+
+        console.log("Fetched Categories Payload:", action.payload);
+
+        const fallback =
+          action.payload?.listOfCategories ||
+          action.payload?.categories ||
+          action.payload?.data?.listOfCategories ||
+          [];
+
+        state.menucategoris = Array.isArray(fallback) ? fallback : [];
+      })
+      .addCase(fetchCategories.rejected, (state) => {
+        state.isLoading = false;
+        state.menucategoris = [];
+      })
+      .addCase(deletecategory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deletecategory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.menucategoris = Array.isArray(action.payload?.listOfCategories)
+          ? action.payload.listOfCategories
+          : [];
+      })
+      .addCase(deletecategory.rejected, (state) => {
+        state.isLoading = false;
+      })
+
+      // Subcategories
+      .addCase(addSubCategory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(addSubCategory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.subcats = Array.isArray(action.payload?.listOfSubCategories)
+          ? action.payload.listOfSubCategories
+          : [];
+      })
+      .addCase(addSubCategory.rejected, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(fetchSubCategory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchSubCategory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.subcats = Array.isArray(action.payload?.listOfSubCategories)
+          ? action.payload.listOfSubCategories
+          : [];
+      })
+      .addCase(fetchSubCategory.rejected, (state) => {
+        state.isLoading = false;
+        state.subcats = [];
+      })
+      .addCase(deleteSubCategory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteSubCategory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.subcats = Array.isArray(action.payload?.listOfSubCategories)
+          ? action.payload.listOfSubCategories
+          : [];
+      })
+      .addCase(deleteSubCategory.rejected, (state) => {
         state.isLoading = false;
       });
   },

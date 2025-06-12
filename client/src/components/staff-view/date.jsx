@@ -1,0 +1,22 @@
+import React from "react";
+import { Badge } from "@/components/ui/badge";
+import { FaCalendarAlt } from "react-icons/fa";
+
+const CurrentDate = () => {
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString(undefined, {
+    // weekday: 'long',
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  return (
+    <Badge className="bg-yellow-200 text-black text-sm gap-2 ">
+      <FaCalendarAlt />
+      {formattedDate}
+    </Badge>
+  );
+};
+
+export default CurrentDate;

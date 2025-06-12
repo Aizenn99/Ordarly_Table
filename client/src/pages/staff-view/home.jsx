@@ -1,9 +1,7 @@
-import React from 'react'
+import React from "react";
 
 const StaffHome = () => {
-  return (
-    <div>StaffHome</div>
-  )
-}
+  return <div>StaffHome</div>;
+};
 
-export default StaffHome
+export default StaffHome;

@@ -13,11 +13,17 @@ import {
 } from "@/components/ui/sheet";
 import { addSpacesFormControls, addTableFormControls } from "@/config";
 import { FaChevronUp, FaChevronDown } from "react-icons/fa";
-
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addTable, getTable, updateTable } from "@/store/admin-slice/table";
+import {
+  addSpaces,
+  addTable,
+  fetchSpaces,
+  getTable,
+  updateTable,
+} from "@/store/admin-slice/table";
 import { toast } from "react-hot-toast";
+import { MdDeleteOutline } from "react-icons/md";
 
 const initialformData = {
   name: "",
@@ -26,17 +32,24 @@ const initialformData = {
   spaces: "",
 };
 
+const initialSpaceFormData = {
+  SpaceName: "",
+};
+
 const AdminTableQR = () => {
   const [openaddTable, setOpenAddTable] = useState(false);
   const [openaddSpaces, setOpenAddSpaces] = useState(false);
   const [currentEditedId, setCurrentEditedId] = useState(null);
   const dispatch = useDispatch();
-  const [isopendown, setIsOpenDown] = useState(false);
-  const { tables } = useSelector((state) => state.adminTable);
+
+  const { tables, spaces } = useSelector((state) => state.adminTable);
   const [formData, setFormData] = useState(initialformData);
+  const [spaceFormData, setSpaceFormData] = useState(initialSpaceFormData);
+  const [collapseStates, setCollapseStates] = useState({});
 
   useEffect(() => {
     dispatch(getTable());
+    dispatch(fetchSpaces());
   }, [dispatch]);
 
   function onSubmit(e) {
@@ -60,16 +73,52 @@ const AdminTableQR = () => {
     }
   }
 
+  function onAddSpaceSubmit(e) {
+    e.preventDefault();
+    dispatch(addSpaces(spaceFormData)).then((res) => {
+      if (res?.meta?.requestStatus === "fulfilled") {
+        toast.success("Space Added Successfully");
+        setOpenAddSpaces(false);
+        setSpaceFormData(initialSpaceFormData);
+        dispatch(fetchSpaces());
+      } else {
+        toast.error("Failed to add space");
+      }
+    });
+  }
+
+  // Create a modified version of addTableFormControls with dynamic spaces options
+  const dynamicTableFormControls = addTableFormControls.map((control) => {
+    if (control.name === "spaces") {
+      return {
+        ...control,
+        options: spaces.map((space) => ({
+          id: space._id,
+          label: space.SpaceName,
+        })),
+      };
+    }
+    return control;
+  });
+
   const getOptionLabel = (name, id) => {
     const control = addTableFormControls.find((ctrl) => ctrl.name === name);
     return control?.options?.find((opt) => opt.id === id)?.label || id;
   };
 
+  const toggleCollapse = (spaceId) => {
+    setCollapseStates((prev) => ({
+      ...prev,
+      [spaceId]: !prev[spaceId],
+    }));
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between p-3 md:p-4">
-        <h1 className="text-xl font-semibold ">Manage Table</h1>
+        <h1 className="text-xl font-semibold">Manage Table</h1>
         <div className="flex gap-2 items-center">
+          {/* Add Table */}
           <Sheet open={openaddTable} onOpenChange={setOpenAddTable}>
             <Button
               className="bg-primary1 hover:bg-primary1 rounded-lg"
@@ -86,13 +135,14 @@ const AdminTableQR = () => {
                   formData={formData}
                   setformData={setFormData}
                   buttonText="Add"
-                  formControls={addTableFormControls}
+                  formControls={dynamicTableFormControls}
                   onSubmit={onSubmit}
                 />
               </div>
             </SheetContent>
           </Sheet>
 
+          {/* Add Space */}
           <Sheet open={openaddSpaces} onOpenChange={setOpenAddSpaces}>
             <Button
               className="bg-primary1 hover:bg-primary1 rounded-lg"
@@ -105,11 +155,28 @@ const AdminTableQR = () => {
                 <SheetTitle className="font-semibold">Add Spaces</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-4 p-4">
+                <div className="overflow-y-auto max-h-100 mb-10">
+                  {spaces && spaces.length > 0 ? (
+                    spaces.map((space) => (
+                      <div
+                        key={space._id}
+                        className="flex items-center justify-between border-b px-2 mb-2 py-1"
+                      >
+                        <span className="text-sm">{space.SpaceName}</span>
+                        <MdDeleteOutline className="text-red-500 cursor-pointer hover:text-red-700" />
+                      </div>
+                    ))
+                  ) : (
+                    <p>No spaces available.</p>
+                  )}
+                </div>
+
                 <CommonForm
-                  formData={formData}
-                  setformData={setFormData}
+                  formData={spaceFormData}
+                  setformData={setSpaceFormData}
                   buttonText="Add"
                   formControls={addSpacesFormControls}
+                  onSubmit={onAddSpaceSubmit}
                 />
               </div>
             </SheetContent>
@@ -117,63 +184,88 @@ const AdminTableQR = () => {
         </div>
       </div>
 
+      {/* Spaces + Tables */}
       <div className="p-3 md:p-4 mt-4">
-        <Collapsible open={isopendown} onOpenChange={setIsOpenDown}>
-          <CollapsibleTrigger asChild>
-            <div
-              className="flex items-center justify-between gap-2 cursor-pointer"
-              onClick={() => setIsOpenDown((prev) => !prev)}
-            >
-              <h1 className="flex items-center gap-2 mb-4 text-primary1">
-                1st Floor tables
-                {isopendown ? (
-                  <FaChevronUp className="text-primary1" />
-                ) : (
-                  <FaChevronDown className="text-primary1" />
-                )}
-              </h1>
-            </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {tables.length > 0 ? (
-                tables.map((table, index) => {
-                  const statusLabel = getOptionLabel("status", table.status);
-                  const spacesLabel = getOptionLabel("spaces", table.spaces);
+        {spaces && spaces.length > 0 ? (
+          spaces.map((space) => {
+            const tablesForSpace = tables.filter(
+              (table) => table.spaces === space._id
+            );
+            const isOpen = collapseStates[space._id] || false;
 
-                  const cardColor =
-                    statusLabel === "available"
-                      ? "bg-green-200 border-primary1"
-                      : statusLabel === "occupied"
-                      ? "bg-red-200 border-red-600"
-                      : statusLabel === "reserved"
-                      ? "bg-blue-200 border-blue-600"
-                      : "bg-gray-100";
+            return (
+              <Collapsible
+                key={space._id}
+                open={collapseStates[space._id] || false}
+                onOpenChange={(open) =>
+                  setCollapseStates((prev) => ({
+                    ...prev,
+                    [space._id]: open,
+                  }))
+                }
+                className="mb-4"
+              >
+                <CollapsibleTrigger asChild>
+                  <div className="flex items-center justify-between mb-3 gap-2 cursor-pointer   rounded-md">
+                    <h1 className="flex items-center gap-2 text-primary1 font-semibold">
+                      {space.SpaceName}
+                    </h1>
+                    {collapseStates[space._id] ? (
+                      <FaChevronUp className="text-primary1" />
+                    ) : (
+                      <FaChevronDown className="text-primary1" />
+                    )}
+                  </div>
+                </CollapsibleTrigger>
 
-                  return (
-                    <div
-                      key={index}
-                      className={`card w-full p-3 rounded shadow border ${cardColor}`}
-                    >
-                      <h2 className="font-semibold text-lg text-center mb-2">
-                        {table.tableName}
-                      </h2>
-                      <p className="text-sm text-center mb-2">
-                        Capacity: {table.capacity}
+                <CollapsibleContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                    {tablesForSpace.length > 0 ? (
+                      tablesForSpace.map((table, index) => {
+                        const statusLabel = getOptionLabel(
+                          "status",
+                          table.status
+                        );
+
+                        const cardColor =
+                          statusLabel === "available"
+                            ? "bg-green-200 border-primary1"
+                            : statusLabel === "occupied"
+                            ? "bg-red-200 border-red-600"
+                            : statusLabel === "reserved"
+                            ? "bg-blue-200 border-blue-600"
+                            : "bg-gray-100";
+
+                        return (
+                          <div
+                            key={index}
+                            className={`card w-full p-3 rounded shadow border ${cardColor}`}
+                          >
+                            <h2 className="font-semibold text-lg text-center mb-2">
+                              {table.tableName}
+                            </h2>
+                            <p className="text-sm text-center mb-2">
+                              Capacity: {table.capacity}
+                            </p>
+                            <p className="text-sm text-center mb-2">
+                              Status: {statusLabel}
+                            </p>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-muted-foreground col-span-full">
+                        No tables in this space.
                       </p>
-                      <p className="text-sm text-center mb-2">
-                        Status: {statusLabel}
-                      </p>
-                      
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-muted-foreground">No tables added yet.</p>
-              )}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })
+        ) : (
+          <p className="text-muted-foreground">No spaces found.</p>
+        )}
       </div>
     </div>
   );
