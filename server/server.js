@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 8000;
 
 const authRoutes = require("./routes/auth/auth-routes");
 const adminRoutes = require("./routes/admin/admin-routes");
+const staffRoutes = require("./routes/Staff/Staff-routes"); // Ensure this path is correct
 
 mongoose
   .connect(
@@ -21,6 +22,8 @@ mongoose
   .catch((err) => console.log("MongoDB connection failed", err));
 
 app.use(cookieParser());
+
+
 app.use(
   cors({
     origin: ["http://localhost:5173"], // ✅ Array format for multiple origins
@@ -30,10 +33,12 @@ app.use(
 );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 dotenv.config();
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/staff",staffRoutes)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 

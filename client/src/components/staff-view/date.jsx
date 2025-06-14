@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { FaCalendarAlt } from "react-icons/fa";
+import { FaRegCalendarAlt } from "react-icons/fa";
 
 const CurrentDate = () => {
   const today = new Date();
@@ -13,7 +13,8 @@ const CurrentDate = () => {
 
   return (
     <Badge className="bg-yellow-200 text-black text-sm gap-2 ">
-      <FaCalendarAlt />
+      <FaRegCalendarAlt className="text-black " />
+
       {formattedDate}
     </Badge>
   );

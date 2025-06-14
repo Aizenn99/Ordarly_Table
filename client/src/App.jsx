@@ -26,6 +26,7 @@ import StaffLayout from "./components/staff-view/layout";
 import StaffTable from "./pages/staff-view/table";
 import StaffMenu from "./pages/staff-view/menu";
 import StaffBill from "./pages/staff-view/Bill";
+import CustomerInfo from "./components/staff-view/CustomerInfo";
 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
@@ -105,6 +106,7 @@ function App() {
           <Route path="home" element={<StaffHome />} />
           <Route path="table" element={<StaffTable/>} />
           <Route path="menu" element={<StaffMenu />} />
+          <Route path="customer" element={<CustomerInfo />} />
           <Route path="bills" element={<StaffBill />} />
         </Route>
       </Routes>
