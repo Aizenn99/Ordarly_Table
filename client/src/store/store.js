@@ -3,6 +3,8 @@ import authReducer from "./auth-slice/auth";
 import AdminmenuItemSlice from "./admin-slice/menuItem";
 import AdminTableSlice from "./admin-slice/table";
 import StaffCartSlice from "./staff-slice/cart"
+import StaffBillSlice from "./staff-slice/Bill";
+import kitchenOrderSlice from "./kitchen-slice/order-slice"
 
 const store = configureStore({
   reducer: {
@@ -10,6 +12,8 @@ const store = configureStore({
     adminMenuItem: AdminmenuItemSlice,
     adminTable: AdminTableSlice,
     staffCart: StaffCartSlice,
+    staffBill: StaffBillSlice,
+    kitchenOrder : kitchenOrderSlice,
   },
 });
 

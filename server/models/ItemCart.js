@@ -12,15 +12,20 @@ const itemCartSchema = new mongoose.Schema(
     },
     items: [
       {
-        itemId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "MenuItem", // assumes a MenuItem schema exists
-          required: true,
+        itemId: { type: mongoose.Schema.Types.ObjectId, ref: "MenuItem" },
+        quantity: Number,
+        sentToKitchen: {
+          type: Boolean,
+          default: false,
         },
         quantity: {
           type: Number,
           required: true,
           default: 1,
+        },
+        sentQuantity: {
+          type: Number,
+          default: 0, // ✅ New field
         },
         price: {
           type: Number,

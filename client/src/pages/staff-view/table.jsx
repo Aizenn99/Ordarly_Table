@@ -151,14 +151,35 @@ const StaffTable = () => {
                             }`}
                             onClick={() => {
                               if (isAvailable) {
-                                navigate("/staff/customer", {
-                                  state: {
-                                    tableId: table._id,
-                                    tableName: table.tableName,
-                                    spaceName: space.SpaceName, 
-                                    capacity: table.capacity
-                                  },
-                                });
+                                const guestInfo = JSON.parse(
+                                  localStorage.getItem("guestInfo")
+                                );
+
+                                if (
+                                  guestInfo &&
+                                  guestInfo.tableName === table.tableName
+                                ) {
+                                  // ✅ Navigate directly to menu if guestCount is set for this table
+                                  navigate("/staff/menu", {
+                                    state: {
+                                      tableId: table._id,
+                                      tableName: table.tableName,
+                                      spaceName: space.SpaceName,
+                                      capacity: table.capacity,
+                                      guestCount: guestInfo.guestCount,
+                                    },
+                                  });
+                                } else {
+                                  // 🚪 Go to customer info to set guest count
+                                  navigate("/staff/customer", {
+                                    state: {
+                                      tableId: table._id,
+                                      tableName: table.tableName,
+                                      spaceName: space.SpaceName,
+                                      capacity: table.capacity,
+                                    },
+                                  });
+                                }
                               }
                             }}
                           >

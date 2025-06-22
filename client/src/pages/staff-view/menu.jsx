@@ -3,7 +3,7 @@ import {
   fetchSubCategory,
   getMenuItem,
 } from "@/store/admin-slice/menuItem";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { LuUtensils } from "react-icons/lu";
 import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
@@ -15,11 +15,18 @@ import {
   removeItemFromCart,
 } from "@/store/staff-slice/cart";
 import { HiOutlineShoppingCart } from "react-icons/hi2";
+import { Separator } from "@/components/ui/separator";
+import { generateBill } from "@/store/staff-slice/Bill";
+import {
+  markItemsAsSentToKitchen,
+  sendToKitchen,
+} from "@/store/kitchen-slice/order-slice";
 
 const StaffMenu = () => {
   const { menuItem, menucategoris, subcats } = useSelector(
     (state) => state.adminMenuItem
   );
+  const { user } = useSelector((state) => state.auth);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [openMenu, setOpenMenu] = useState(false);
@@ -41,6 +48,12 @@ const StaffMenu = () => {
   const { state } = useLocation();
 
   useEffect(() => {
+    if (!state?.tableName) {
+      setQuantities({}); // reset all quantities to 0
+    }
+  }, [state?.tableName]);
+
+  useEffect(() => {
     dispatch(getMenuItem());
     dispatch(fetchCategories());
     dispatch(fetchSubCategory());
@@ -51,9 +64,15 @@ const StaffMenu = () => {
       dispatch(getCartByTable(state.tableName))
         .unwrap()
         .then((data) => setCart(data))
-        .catch(() => toast.error("Failed to load cart"));
+        .catch(() => toast.error("Cart is not in Storage"));
     }
   }, [dispatch, state?.tableName]);
+
+  useEffect(() => {
+    if (!state?.tableName) {
+      setCart(null);
+    }
+  }, [state?.tableName]);
 
   useEffect(() => {
     if (openCart && state?.tableName) {
@@ -80,6 +99,9 @@ const StaffMenu = () => {
         initialQuantities[item.itemId._id] = item.quantity;
       });
       setQuantities(initialQuantities);
+    } else {
+      // 🧼 clear if cart is empty
+      setQuantities({});
     }
   }, [cart]);
 
@@ -93,6 +115,14 @@ const StaffMenu = () => {
   }, [cart]);
 
   useEffect(() => {
+    if (!state?.tableName) {
+      setCart(null);
+      setQuantities({});
+      localStorage.removeItem("cart_quantities");
+    }
+  }, [state?.tableName]);
+
+  useEffect(() => {
     if (state?.tableName) {
       dispatch(getCartByTable(state.tableName))
         .unwrap()
@@ -100,8 +130,7 @@ const StaffMenu = () => {
           if (data?.items?.length > 0) {
             setCart(data);
           }
-        })
-        .catch(() => toast.error("Failed to load cart"));
+        });
     }
   }, [state?.tableName]);
 
@@ -200,6 +229,7 @@ const StaffMenu = () => {
           tableName: state.tableName,
           guestCount: state.guestCount,
           itemId: id,
+
           quantity: newQty,
         })
       )
@@ -215,6 +245,32 @@ const StaffMenu = () => {
         })
         .catch(() => toast.error("Failed to update quantity"));
     }
+  };
+
+  const handleGenerateBill = () => {
+    if (!state?.tableName) {
+      toast.error("Please select the table first");
+      return;
+    }
+
+    dispatch(
+      generateBill({ tableName: state.tableName, spaceName: state.spaceName })
+    )
+      .unwrap()
+      .then(() => {
+        toast.success("Bill generated successfully");
+
+        // 🧹 Clear localStorage data
+        localStorage.removeItem("cart_quantities");
+        localStorage.removeItem("guestInfo");
+
+        // 🧼 Reset UI states
+        setopenCart(false);
+        setCart(null);
+        setQuantities({});
+        setCartItems([]);
+      })
+      .catch(() => toast.error("Failed to generate bill"));
   };
 
   const filteredMenuItem = Array.isArray(menuItem)
@@ -234,8 +290,77 @@ const StaffMenu = () => {
     : [];
 
   const totalItems = cart?.items?.length || 0;
+  const subtotal = cartItems.reduce(
+    (total, item) => total + item.itemId.price * item.quantity,
+    0
+  );
+  const charges = Math.round(subtotal * 0.05); // or use .toFixed(2) if decimals are needed
+  // flat or calculate dynamically
 
+  // kitchen order ticket
 
+  function handleSendToKitchen() {
+    if (!state?.tableName || !state?.spaceName) {
+      toast.error("Table or Space not selected");
+      return;
+    }
+
+    if (!cart || cart.items?.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+
+    const unsentValidItems = cart.items
+      .map((item) => {
+        const sentQty = item.sentQuantity || 0;
+        const diffQty = item.quantity - sentQty;
+
+        if (item?.itemId?.title && diffQty > 0) {
+          return {
+            itemId: item.itemId._id,
+            itemName: item.itemId.title,
+            quantity: diffQty,
+            note: item.note || "",
+          };
+        }
+
+        console.warn("❌ Skipped item (nothing new to send):", item);
+        return null;
+      })
+      .filter(Boolean); // Remove nulls
+
+    if (unsentValidItems.length === 0) {
+      toast.info("No new valid items to send to kitchen");
+      return;
+    }
+
+    const kotPayload = {
+      tableName: state.tableName,
+      spaceName: state.spaceName,
+      guestCount: state.guestCount || 1,
+      username: user?.userName || "unknown_staff",
+      items: unsentValidItems,
+    };
+
+    dispatch(sendToKitchen(kotPayload))
+      .unwrap()
+      .then((res) => {
+        toast.success(`✅ Order sent to kitchen (KOT #${res.kotNumber})`);
+
+        // ✅ Mark sent quantities in backend
+        dispatch(markItemsAsSentToKitchen(state.tableName))
+          .unwrap()
+          .then(() => {
+            dispatch(getCartByTable(state.tableName)); // Refresh updated cart
+          })
+          .catch(() => {
+            toast.error("⚠️ Failed to mark items as sent");
+          });
+      })
+      .catch(() => {
+        toast.error("❌ Failed to send order to kitchen");
+      });
+  }
 
   return (
     <>
@@ -344,7 +469,7 @@ const StaffMenu = () => {
                       <span className="font-semibold text-sm text-black">
                         ₹ {item.price}
                       </span>
-                      {quantities[item._id] ? (
+                      {state?.tableName && quantities[item._id] ? (
                         <div className="flex items-center gap-1">
                           <button
                             className="bg-red-500 text-white w-6 h-6 rounded-full"
@@ -382,87 +507,142 @@ const StaffMenu = () => {
         </div>
       </div>
 
-     <div className="fixed bottom-26 right-6 z-50">
-  <button
-    onClick={() => setopenCart(true)}
-    className="relative border flex items-center justify-center bg-gray-200 text-primary1 rounded-full w-14 h-14 text-3xl shadow-lg"
-    title="View Cart"
-  >
-    <HiOutlineShoppingCart />
-    
-    {totalItems > 0 && (
-      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-        {totalItems}
-      </span>
-    )}
-  </button>
-</div>
+      <div className="fixed bottom-26 right-6 z-50">
+        <button
+          onClick={() => setopenCart(true)}
+          className="relative border flex items-center justify-center bg-white text-primary1 rounded-full w-14 h-14 text-3xl shadow-lg"
+          title="View Cart"
+        >
+          <HiOutlineShoppingCart />
+
+          {totalItems > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+              {totalItems}
+            </span>
+          )}
+        </button>
+      </div>
       <Sheet onOpenChange={setopenCart} open={openCart}>
         <SheetContent className="w-96" side="right">
-          <SheetHeader className="  ">
+          <SheetHeader>
             <div className="flex items-center mt-8 justify-between">
               <span className="text-sm font-semibold text-black">
-                Table |<span className="text-primary1">{state?.tableName}</span>
+                Table |{" "}
+                <span className="text-primary1">{state?.tableName}</span>
               </span>
               <span className="text-sm font-semibold text-black">
-                Guest |
+                Guest |{" "}
                 <span className="text-primary1">{state?.guestCount}</span>
               </span>
             </div>
-            <div className=" mt-3 flex items-center justify-center gap-2 ">
-              Items Cart <HiOutlineShoppingCart />{" "}
+            <div className="mt-3 flex items-center justify-center gap-2">
+              Items Cart <HiOutlineShoppingCart />
             </div>
           </SheetHeader>
 
-          <div className="flex flex-col gap-4 p-3">
+          <div className="flex flex-col gap-4 p-3 h-full">
             {!cart?.items || cart.items.length === 0 ? (
               <p className="text-sm text-gray-500 text-center">
                 No items in cart.
               </p>
             ) : (
-              cart.items.map((cartItem) => {
-                const menuData = menuItem.find(
-                  (i) =>
-                    i._id === cartItem.itemId._id || i._id === cartItem.itemId
-                );
-                if (!menuData) return null;
-                const category = menucategoris.find(
-                  (cat) => cat._id === menuData.category
-                );
+              <>
+                {/* Scrollable Items Section */}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="bg-gray-100 rounded-2xl p-4 space-y-4">
+                    {cart.items.map((cartItem) => {
+                      const menuData = menuItem.find(
+                        (i) =>
+                          i._id === cartItem.itemId._id ||
+                          i._id === cartItem.itemId
+                      );
+                      if (!menuData) return null;
 
-                
-                return (
-                  <div
-                    key={cartItem._id}
-                    className="bg-gray-100 p-3 rounded-xl shadow flex flex-col"
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="text-md flex items-center justify-center gap-3 font-semibold text-gray-800">
-                        {category?.icon ? (
-                          <img
-                            src={category.icon}
-                            alt={category.name}
-                            className="w-4 h-4"
-                          />
-                        ) : (
-                          <LuUtensils className="w-4 h-4" />
-                        )}
-                        {menuData.title}
-                      </span>
-                    
-                      <span className="text-sm font-semibold text-black">
-                        Qty: {cartItem.quantity}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center mt-1 text-sm text-gray-600">
-                      <span>₹ {menuData.price}</span>
-                      <span className="text-black font-medium">
-                        ₹ {menuData.price * cartItem.quantity}
-                      </span>
-                    </div>
+                      const category = menucategoris.find(
+                        (cat) => cat._id === menuData.category
+                      );
+
+                      const isFullySent =
+                        (cartItem.sentQuantity || 0) >= cartItem.quantity;
+
+                      return (
+                        <div
+                          key={cartItem._id}
+                          className={`p-3 flex flex-col gap-1 min-h-[70px] ${
+                            isFullySent ? "opacity-50" : ""
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="text-md flex items-center gap-2 font-semibold text-gray-800">
+                              {category?.icon ? (
+                                <img
+                                  src={category.icon}
+                                  alt={category.name}
+                                  className="w-4 h-4"
+                                />
+                              ) : (
+                                <LuUtensils className="w-4 h-4" />
+                              )}
+                              {menuData.title}
+                            </span>
+
+                            <span className="text-sm font-semibold text-black">
+                              Qty: {cartItem.quantity}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-sm text-gray-600">
+                            <span>₹ {menuData.price}</span>
+                            <span className="text-black font-medium">
+                              ₹ {menuData.price * cartItem.quantity}
+                            </span>
+                          </div>
+
+                          {isFullySent && (
+                            <span className="text-xs text-green-600 mt-1">
+                              ✅ Sent to Kitchen
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })
+                </div>
+
+                {/* Divider */}
+                <Separator className="h-[1px] bg-black opacity-70 my-3 rounded-full" />
+
+                {/* Totals & Action Buttons */}
+                <div className="space-y-2 bg-gray-100 rounded-2xl p-4 mb-4 text-sm text-gray-700">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span className="font-medium">₹ {subtotal}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Charges</span>
+                    <span className="font-medium">₹ {charges}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-black">
+                    <span>Total</span>
+                    <span>₹ {subtotal + charges}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center gap-2 mt-4">
+                    <button
+                      onClick={handleSendToKitchen}
+                      className="bg-primary1 text-white font-semibold py-2 w-full rounded-full"
+                    >
+                      Send To Kitchen
+                    </button>
+                    <button
+                      onClick={handleGenerateBill}
+                      className="bg-primary1 text-white font-semibold py-2 w-full rounded-full"
+                    >
+                      Generate Bill
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </SheetContent>

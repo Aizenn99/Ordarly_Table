@@ -11,6 +11,10 @@ const billSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    spaceName: {
+      type: String,
+      required: true,
+    },
     guestCount: {
       type: Number,
       required: true,

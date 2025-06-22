@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 const CustomerInfo = () => {
   const { state } = useLocation();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [guestCount, setGuestCount] = useState(0);
 
@@ -15,6 +16,12 @@ const CustomerInfo = () => {
   useEffect(() => {
     dispatch(getTable());
     dispatch(fetchSpaces());
+
+    // Load guest count from localStorage if it exists
+    const storedGuestCount = localStorage.getItem("guestCount");
+    if (storedGuestCount) {
+      setGuestCount(parseInt(storedGuestCount));
+    }
   }, [dispatch]);
 
   const incrementGuest = () => {
@@ -31,25 +38,33 @@ const CustomerInfo = () => {
     }
   };
 
-  const navigate = useNavigate()
   const handleSubmit = () => {
-  if (guestCount === 0) {
-    toast.error("Guest count must be at least 1");
-    return;
-  }
-  toast.success(`Guest count of ${guestCount} added!`);
+    if (guestCount === 0) {
+      toast.error("Guest count must be at least 1");
+      return;
+    }
 
-  navigate("/staff/menu", {
-    state: {
-      guestCount: guestCount,
-      tableName: state?.tableName,
-      spaceName: state?.spaceName,
-    },
-  });
+    toast.success(`Guest count of ${guestCount} added!`);
 
-  setGuestCount(0);
-};
+    // Save to localStorage
+    localStorage.setItem(
+      "guestInfo",
+      JSON.stringify({
+        tableName: state?.tableName,
+        guestCount: guestCount,
+      })
+    );
 
+    navigate("/staff/menu", {
+      state: {
+        guestCount: guestCount,
+        tableName: state?.tableName,
+        spaceName: state?.spaceName,
+      },
+    });
+
+    setGuestCount(0);
+  };
 
   return (
     <div className="flex flex-col h-screen p-3">

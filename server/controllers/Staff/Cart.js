@@ -49,7 +49,6 @@ exports.addOrUpdateItemToCart = async (req, res) => {
 exports.getCartByTable = async (req, res) => {
   try {
     const { tableName } = req.params;
-    console.log("Fetching cart for table:", tableName);
 
     const cart = await ItemCart.findOne({ tableName }).populate("items.itemId");
     if (!cart) {
