@@ -1,16 +1,12 @@
 const Bill = require("../../models/Bill");
 const ItemCart = require("../../models/ItemCart");
 const MenuItem = require("../../models/menuitem");
+const {getNextBillNumber} = require("../../helper/utils")
 
-// 1. Generate a new bill from cart
-const getNextBillNumber = require("../../helper/utlis");
 
 exports.generateBill = async (req, res) => {
   try {
     const { tableName, spaceName } = req.body;
-
-    // ⚠️ REMOVE THIS ↓
-    // const newBill = await Bill.create(req.body); ❌ Unnecessary
 
     const cart = await ItemCart.findOne({ tableName }).populate("items.itemId");
     if (!cart || cart.items.length === 0) {
@@ -28,24 +24,45 @@ exports.generateBill = async (req, res) => {
     const charges = subtotal * 0.05;
     const totalAmount = subtotal + charges;
 
-    const billNumber = await getNextBillNumber();
+    let bill;
+    let attempts = 0;
+    const maxAttempts = 5;
 
-    const bill = new Bill({
-      billNumber,
-      tableName,
-      spaceName,
-      guestCount: cart.guestCount,
-      items: itemDetails,
-      subtotal,
-      charges,
-      totalAmount,
-      status: "UNPAID",
-    });
+    while (attempts < maxAttempts) {
+      attempts++;
 
-    await bill.save();
+      const billNumber = await getNextBillNumber(); // this should return new one every time
+
+      bill = new Bill({
+        billNumber,
+        tableName,
+        spaceName,
+        guestCount: cart.guestCount,
+        items: itemDetails,
+        subtotal,
+        charges,
+        totalAmount,
+        status: "UNPAID",
+      });
+
+      try {
+        await bill.save();
+        break; // success!
+      } catch (err) {
+        if (err.code === 11000) {
+          console.warn(`⚠️ Duplicate billNumber: ${billNumber}, retrying...`);
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    if (attempts === maxAttempts) {
+      return res.status(500).json({ message: "Could not generate unique bill number" });
+    }
+
     await ItemCart.deleteOne({ tableName });
 
-    // ✅ Emit socket after saving
     const io = req.app.get("io");
     io.emit("new-bill", bill);
 
@@ -55,6 +72,7 @@ exports.generateBill = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 // 2. Get all bills
 exports.getAllBills = async (req, res) => {

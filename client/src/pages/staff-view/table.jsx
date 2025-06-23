@@ -1,4 +1,3 @@
-import InfoCard from "@/components/admin-view/menu/InfoCard";
 import CurrentDate from "@/components/staff-view/date";
 import {
   Collapsible,

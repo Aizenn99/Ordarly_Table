@@ -247,31 +247,36 @@ const StaffMenu = () => {
     }
   };
 
-  const handleGenerateBill = () => {
-    if (!state?.tableName) {
-      toast.error("Please select the table first");
-      return;
-    }
+ const handleGenerateBill = () => {
+  if (!state?.tableName) {
+    toast.error("Please select the table first");
+    return;
+  }
 
-    dispatch(
-      generateBill({ tableName: state.tableName, spaceName: state.spaceName })
-    )
-      .unwrap()
-      .then(() => {
-        toast.success("Bill generated successfully");
+  dispatch(
+    generateBill({ tableName: state.tableName, spaceName: state.spaceName })
+  )
+    .unwrap()
+    .then(() => {
+      toast.success("Bill generated successfully");
 
-        // 🧹 Clear localStorage data
-        localStorage.removeItem("cart_quantities");
-        localStorage.removeItem("guestInfo");
+      // 🧹 Clear localStorage data
+      localStorage.removeItem("cart_quantities");
 
-        // 🧼 Reset UI states
-        setopenCart(false);
-        setCart(null);
-        setQuantities({});
-        setCartItems([]);
-      })
-      .catch(() => toast.error("Failed to generate bill"));
-  };
+      // ❌ Remove guest info only for the current table
+      const guestInfoMap = JSON.parse(localStorage.getItem("guestInfoMap")) || {};
+      delete guestInfoMap[state.tableName];
+      localStorage.setItem("guestInfoMap", JSON.stringify(guestInfoMap));
+
+      // 🧼 Reset UI states
+      setopenCart(false);
+      setCart(null);
+      setQuantities({});
+      setCartItems([]);
+    })
+    .catch(() => toast.error("Failed to generate bill"));
+};
+
 
   const filteredMenuItem = Array.isArray(menuItem)
     ? menuItem.filter((item) => {

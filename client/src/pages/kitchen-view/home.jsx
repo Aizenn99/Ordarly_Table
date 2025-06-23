@@ -84,8 +84,8 @@ const KitchenHome = () => {
       <Accordion type="multiple" className="space-y-4">
         {orders.map((orderItem) => (
           <AccordionItem key={orderItem._id} value={orderItem._id}>
-            <div className="rounded-xl border shadow px-4 py-3">
-              <div className="flex justify-between items-center">
+            <div className="rounded-xl border p-1 shadow px-4 py-3">
+              <div className="flex justify-between items-center ">
                 <div>
                   <p className="font-semibold">Order #{orderItem.kotNumber}</p>
                   <p className="text-sm">Staff | {orderItem.username}</p>
@@ -103,14 +103,14 @@ const KitchenHome = () => {
                   >
                     Status: {orderItem.status.toUpperCase()}
                   </span>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-3">
                     Created:{" "}
                     {new Date(orderItem.createdAt).toLocaleTimeString()}
                   </p>
                 </div>
               </div>
 
-              <AccordionTrigger className="w-full justify-center mt-3">
+              <AccordionTrigger className="w-full justify-center mt-1">
                 Show Items
               </AccordionTrigger>
 
@@ -119,7 +119,7 @@ const KitchenHome = () => {
                   <div className="flex justify-between items-center mb-2">
                     <p className="text-sm font-medium">Items</p>
                     <button
-                      className="text-xs underline"
+                      className="text-xs "
                       onClick={() =>
                         handleSelectAll(orderItem._id, orderItem.items.length)
                       }
@@ -131,7 +131,7 @@ const KitchenHome = () => {
                   {orderItem.items.map((item, index) => (
                     <div
                       key={index}
-                      className="flex justify-between text-sm items-center py-1 border-b"
+                      className="flex justify-between text-sm items-center py-1 mb-1"
                     >
                       <span className="w-3/5">
                         {index + 1}. {item.itemName}
@@ -150,7 +150,7 @@ const KitchenHome = () => {
                     </div>
                   ))}
 
-                  <div className="mt-4 flex gap-3">
+                  <div className="mt-6 flex items-center justify-center gap-3">
                     <Button className="bg-green-600 hover:bg-green-700 text-white">
                       Prepared
                     </Button>

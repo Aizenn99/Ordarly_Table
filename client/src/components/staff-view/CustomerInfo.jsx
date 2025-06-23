@@ -1,7 +1,7 @@
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { fetchSpaces, getTable } from "@/store/admin-slice/table";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
+import { fetchSpaces, getTable } from "@/store/admin-slice/table";
 import { toast } from "react-hot-toast";
 
 const CustomerInfo = () => {
@@ -10,19 +10,26 @@ const CustomerInfo = () => {
   const navigate = useNavigate();
 
   const [guestCount, setGuestCount] = useState(0);
-
   const tableCapacity = state?.capacity || 0;
 
   useEffect(() => {
     dispatch(getTable());
     dispatch(fetchSpaces());
 
-    // Load guest count from localStorage if it exists
-    const storedGuestCount = localStorage.getItem("guestCount");
-    if (storedGuestCount) {
-      setGuestCount(parseInt(storedGuestCount));
+    const guestInfoMap = JSON.parse(localStorage.getItem("guestInfoMap")) || {};
+    const currentTableGuest = guestInfoMap[state?.tableName];
+
+    // ✅ Auto-navigate to menu if guest count already exists for this table
+    if (currentTableGuest) {
+      navigate("/staff/menu", {
+        state: {
+          guestCount: currentTableGuest.guestCount,
+          tableName: state?.tableName,
+          spaceName: state?.spaceName,
+        },
+      });
     }
-  }, [dispatch]);
+  }, [dispatch, state, navigate]);
 
   const incrementGuest = () => {
     if (guestCount < tableCapacity) {
@@ -46,18 +53,17 @@ const CustomerInfo = () => {
 
     toast.success(`Guest count of ${guestCount} added!`);
 
-    // Save to localStorage
-    localStorage.setItem(
-      "guestInfo",
-      JSON.stringify({
-        tableName: state?.tableName,
-        guestCount: guestCount,
-      })
-    );
+    // ✅ Store guest info per table
+    const existingData = JSON.parse(localStorage.getItem("guestInfoMap")) || {};
+    existingData[state?.tableName] = {
+      guestCount,
+      spaceName: state?.spaceName,
+    };
+    localStorage.setItem("guestInfoMap", JSON.stringify(existingData));
 
     navigate("/staff/menu", {
       state: {
-        guestCount: guestCount,
+        guestCount,
         tableName: state?.tableName,
         spaceName: state?.spaceName,
       },
@@ -77,7 +83,9 @@ const CustomerInfo = () => {
         <span className="text-sm text-gray-500">
           Space | {state?.spaceName}
         </span>
-        <span className="text-xs text-muted">Capacity: {tableCapacity}</span>
+        <span className="text-xs text-gray-500">
+          Capacity: {tableCapacity}
+        </span>
       </div>
 
       <div className="flex flex-col gap-4 mt-4 max-w-sm mx-auto w-full">

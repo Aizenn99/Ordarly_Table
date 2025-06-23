@@ -1,5 +1,5 @@
 const KitchenOrder = require("../../models/KitchenOrder");
-const getNextKOTNumber = require("../../helper/utlis");
+const {getNextKOTNumber} = require("../../helper/utils");
 const Cart = require("../../models/ItemCart");
 
 // @desc   Send order to kitchen
