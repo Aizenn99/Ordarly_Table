@@ -13,7 +13,7 @@ const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
     origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   },
 });
@@ -37,7 +37,7 @@ const authRoutes = require("./routes/auth/auth-routes");
 const adminRoutes = require("./routes/admin/admin-routes");
 const staffRoutes = require("./routes/Staff/Staff-routes"); // Make sure the path is correct
 const kitchenRoutes = require("./routes/Kitchen/kitchen-routes")(io);
-
+const dashboardRoutes = require("./routes/dashboard/reports-routes");
 // MongoDB Connection
 mongoose
   .connect(
@@ -65,6 +65,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/kitchen", kitchenRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 
 

@@ -23,8 +23,9 @@ const StaffPayBill = () => {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("");
 
-  // 🚨 Guard: If bill is missing (refresh, back navigation, etc.)
+  // 🚨 Guard for missing bill
   if (!bill) {
     return (
       <div className="p-4 text-center text-red-600 font-semibold">
@@ -36,8 +37,13 @@ const StaffPayBill = () => {
   const isPaid = bill.status.toLowerCase() === "paid";
 
   const handleMarkAsPaid = () => {
+    if (!paymentMethod) {
+      toast.error("Please select a payment method");
+      return;
+    }
+
     setLoading(true);
-    dispatch(markBillAsPaid(bill.billNumber))
+    dispatch(markBillAsPaid({ billNumber: bill.billNumber, paymentMethod }))
       .unwrap()
       .then(() => {
         toast.success(`Bill #${bill.billNumber} marked as paid ✅`);
@@ -103,7 +109,9 @@ const StaffPayBill = () => {
               </span>
               <span className="text-center">{item.quantity}</span>
               <span className="text-center">₹{item.unitPrice}</span>
-              <span className="text-right font-medium">₹{item.totalPrice}</span>
+              <span className="text-right font-medium">
+                ₹{item.totalPrice}
+              </span>
             </div>
           ))}
         </div>
@@ -125,9 +133,13 @@ const StaffPayBill = () => {
       <div className="p-4 mt-8 bg-white rounded-2xl shadow-md">
         <h2 className="text-lg font-semibold text-primary1 mb-2">PAY USING</h2>
 
+        {/* CASH */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <div className="cursor-pointer">
+            <div
+              className="cursor-pointer"
+              onClick={() => setPaymentMethod("CASH")}
+            >
               <span className="flex items-center bg-gray-100 rounded-lg gap-2 p-3 hover:bg-gray-200">
                 <BsCash size={24} className="text-primary1" />
                 <span className="text-lg font-semibold">Cash</span>
@@ -157,12 +169,41 @@ const StaffPayBill = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        <div className="mt-2 cursor-pointer">
-          <span className="flex items-center bg-gray-100 rounded-lg gap-2 p-3 hover:bg-gray-200">
-            <FcGoogle size={24} />
-            <span className="text-lg font-semibold">UPI/Card</span>
-          </span>
-        </div>
+        {/* UPI / CARD */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <div
+              className="mt-2 cursor-pointer"
+              onClick={() => setPaymentMethod("UPI")}
+            >
+              <span className="flex items-center bg-gray-100 rounded-lg gap-2 p-3 hover:bg-gray-200">
+                <FcGoogle size={24} />
+                <span className="text-lg font-semibold">UPI / Card</span>
+              </span>
+            </div>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-primary1">
+                Confirm Payment
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to mark this bill as paid via{" "}
+                <strong>UPI / Card</strong>?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-primary1"
+                onClick={handleMarkAsPaid}
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Yes, Pay"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

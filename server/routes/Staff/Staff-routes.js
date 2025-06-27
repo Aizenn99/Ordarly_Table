@@ -22,7 +22,7 @@ router.post("/cart/remove-item", removeItemFromCart);
 
 router.post("/bill/generate", generateBill);
 router.get("/bills", getAllBills);
-router.put("/bill/mark-paid/:billNumber", markBillAsPaid);
+router.patch("/bill/mark-paid/:billNumber", markBillAsPaid);
 router.get("/bill/:billNumber", getBillByNumber);
 router.delete("/bill/:billNumber", deleteBill);
 

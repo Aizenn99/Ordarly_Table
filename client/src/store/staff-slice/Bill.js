@@ -13,12 +13,12 @@ const initialState = {
 
 export const generateBill = createAsyncThunk(
   "bill/generateBill",
-  async ({ tableName, spaceName }, thunkAPI) => {
+  async ({ tableName, spaceName, paymentMethod }, thunkAPI) => {
   
     try {
       const response = await axios.post(
         "http://localhost:8000/api/staff/bill/generate",
-        { tableName, spaceName },
+        { tableName, spaceName, paymentMethod },
         { headers: { "Content-Type": "application/json" } }
       );
       return response.data.bill;
@@ -60,16 +60,19 @@ export const getBillByNumber = createAsyncThunk(
 // 4. Mark Bill as PAID
 export const markBillAsPaid = createAsyncThunk(
   "bill/markBillAsPaid",
-  async (billNumber, thunkAPI) => {
-    try {
-      const response = await axios.put(
-        `http://localhost:8000/api/staff/bill/mark-paid/${billNumber}`
-      );
-      return response.data.bill;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.response?.data || "Something went wrong");
-    }
+ async ({ billNumber, paymentMethod }, thunkAPI) => {
+  try {
+    const response = await axios.patch(
+      `http://localhost:8000/api/staff/bill/mark-paid/${billNumber}`,
+      { paymentMethod },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return response.data.bill;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(error.response?.data || "Something went wrong");
   }
+}
+
 );
 
 

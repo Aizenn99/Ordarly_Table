@@ -6,7 +6,12 @@ const {getNextBillNumber} = require("../../helper/utils")
 
 exports.generateBill = async (req, res) => {
   try {
-    const { tableName, spaceName } = req.body;
+    const { tableName, spaceName, paymentMethod } = req.body;
+
+    if (!tableName || !spaceName || !paymentMethod) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+    console.log("Generating bill for table:", tableName, "in space:", spaceName);
 
     const cart = await ItemCart.findOne({ tableName }).populate("items.itemId");
     if (!cart || cart.items.length === 0) {
@@ -31,7 +36,7 @@ exports.generateBill = async (req, res) => {
     while (attempts < maxAttempts) {
       attempts++;
 
-      const billNumber = await getNextBillNumber(); // this should return new one every time
+      const billNumber = await getNextBillNumber();
 
       bill = new Bill({
         billNumber,
@@ -43,11 +48,12 @@ exports.generateBill = async (req, res) => {
         charges,
         totalAmount,
         status: "UNPAID",
+        paymentMethod, // ✅ Required field
       });
 
       try {
         await bill.save();
-        break; // success!
+        break;
       } catch (err) {
         if (err.code === 11000) {
           console.warn(`⚠️ Duplicate billNumber: ${billNumber}, retrying...`);
@@ -58,7 +64,9 @@ exports.generateBill = async (req, res) => {
     }
 
     if (attempts === maxAttempts) {
-      return res.status(500).json({ message: "Could not generate unique bill number" });
+      return res
+        .status(500)
+        .json({ message: "Could not generate unique bill number" });
     }
 
     await ItemCart.deleteOne({ tableName });
@@ -72,6 +80,7 @@ exports.generateBill = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 
 // 2. Get all bills
@@ -101,13 +110,19 @@ exports.getBillByNumber = async (req, res) => {
 };
 
 // 4. Mark bill as PAID
+// 4. Mark bill as PAID
 exports.markBillAsPaid = async (req, res) => {
   try {
     const { billNumber } = req.params;
+    const { paymentMethod } = req.body; // 👈 Get from request body
+
+    if (!["CASH", "UPI", "CARD", "CREDIT"].includes(paymentMethod)) {
+      return res.status(400).json({ message: "Invalid or missing payment method" });
+    }
 
     const bill = await Bill.findOneAndUpdate(
       { billNumber: parseInt(billNumber) },
-      { status: "PAID" },
+      { status: "PAID", paymentMethod }, // 👈 Save it here
       { new: true }
     );
 
@@ -115,15 +130,17 @@ exports.markBillAsPaid = async (req, res) => {
       return res.status(404).json({ message: "Bill not found" });
     }
 
-    // ✅ Emit updated bill through socket
     const io = req.app.get("io");
-    io.emit("bill-paid", bill); // <-- send full updated bill
+    io.emit("bill-paid", bill);
+        io.emit("dashboard:update");
+
 
     res.status(200).json({ message: "Bill marked as PAID", bill });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 // 5. Delete a bill (if needed)
 exports.deleteBill = async (req, res) => {

@@ -254,7 +254,11 @@ const StaffMenu = () => {
   }
 
   dispatch(
-    generateBill({ tableName: state.tableName, spaceName: state.spaceName })
+    generateBill({
+      tableName: state.tableName,
+      spaceName: state.spaceName,
+      paymentMethod: "CASH", // ✅ Required for backend
+    })
   )
     .unwrap()
     .then(() => {
@@ -263,12 +267,10 @@ const StaffMenu = () => {
       // 🧹 Clear localStorage data
       localStorage.removeItem("cart_quantities");
 
-      // ❌ Remove guest info only for the current table
       const guestInfoMap = JSON.parse(localStorage.getItem("guestInfoMap")) || {};
       delete guestInfoMap[state.tableName];
       localStorage.setItem("guestInfoMap", JSON.stringify(guestInfoMap));
 
-      // 🧼 Reset UI states
       setopenCart(false);
       setCart(null);
       setQuantities({});
@@ -276,6 +278,7 @@ const StaffMenu = () => {
     })
     .catch(() => toast.error("Failed to generate bill"));
 };
+
 
 
   const filteredMenuItem = Array.isArray(menuItem)
