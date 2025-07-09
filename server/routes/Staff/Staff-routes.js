@@ -1,30 +1,34 @@
 const express = require("express");
 const router = express.Router();
+
 const {
   addOrUpdateItemToCart,
   getCartByTable,
   removeItemFromCart,
 } = require("../../controllers/Staff/Cart");
+
 const {
   generateBill,
   getAllBills,
- markBillAsPaid,
- getBillByNumber,
- deleteBill
-
+  markBillAsPaid,
+  getBillByNumber,
+  getAllBillsAdmin,
+  deleteBill,
 } = require("../../controllers/Staff/Bill");
 
-// Route to add or update an item in the cart
+const { authMiddleWare } = require("../../controllers/auth/auth-controller");
+
+// ✅ Cart Routes (optional to secure)
 router.post("/cart/add-up", addOrUpdateItemToCart);
 router.get("/cart/:tableName", getCartByTable);
 router.post("/cart/remove-item", removeItemFromCart);
 
-
-router.post("/bill/generate", generateBill);
-router.get("/bills", getAllBills);
-router.patch("/bill/mark-paid/:billNumber", markBillAsPaid);
-router.get("/bill/:billNumber", getBillByNumber);
-router.delete("/bill/:billNumber", deleteBill);
-
+// ✅ Bill Routes (ALL protected)
+router.post("/bill/generate", authMiddleWare, generateBill);
+router.get("/bills", authMiddleWare, getAllBills); // ✅ Only fetch bills of logged-in staff
+router.get("/bills/admin", authMiddleWare, getAllBillsAdmin); // ✅ Admins only
+router.patch("/bill/mark-paid/:billNumber", authMiddleWare, markBillAsPaid);
+router.get("/bill/:billNumber", authMiddleWare, getBillByNumber);
+router.delete("/bill/:billNumber", authMiddleWare, deleteBill);
 
 module.exports = router;

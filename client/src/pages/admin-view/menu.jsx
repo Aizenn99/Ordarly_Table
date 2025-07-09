@@ -258,23 +258,46 @@ const AdminMenu = () => {
           <div className="w-full overflow-x-auto max-w-[360px] sm:max-w-full">
             <h2 className="font-semibold text-md mb-2">Sub Categories</h2>
             <div className="flex gap-3 px-2 pb-2 w-max">
-              {subcats.map((sub) => (
-                <button
-                  key={sub._id}
-                  onClick={() =>
-                    setSelectedSubCategory(
-                      sub.name === selectedSubCategory ? null : sub.name
-                    )
+              {subcats
+                .filter((sub) => {
+                  if (selectedCategory) {
+                    // When a category is selected, only show subcategories with items under that category
+                    const category = menucategoris.find(
+                      (cat) => cat.name === selectedCategory
+                    );
+                    if (!category) return false;
+
+                    return menuItem.some(
+                      (item) =>
+                        item.category?.toString() ===
+                          category._id?.toString() &&
+                        item.subcategory?.toString() === sub._id?.toString()
+                    );
+                  } else {
+                    // When no category is selected, show subcategories that have any items
+                    return menuItem.some(
+                      (item) =>
+                        item.subcategory?.toString() === sub._id?.toString()
+                    );
                   }
-                  className={`px-4 py-2 rounded-lg text-sm shadow transition whitespace-nowrap border ${
-                    selectedSubCategory === sub.name
-                      ? "bg-primary1 text-white border-primary1"
-                      : "bg-[#E3F4F4] text-primary1 border-primary1"
-                  }`}
-                >
-                  {sub.name}
-                </button>
-              ))}
+                })
+                .map((sub) => (
+                  <button
+                    key={sub._id}
+                    onClick={() =>
+                      setSelectedSubCategory(
+                        sub.name === selectedSubCategory ? null : sub.name
+                      )
+                    }
+                    className={`p-2 rounded-lg text-sm shadow transition whitespace-nowrap border ${
+                      selectedSubCategory === sub.name
+                        ? "bg-primary1 text-white border-primary1"
+                        : "bg-[#E3F4F4] text-primary1 border-primary1"
+                    }`}
+                  >
+                    {sub.name}
+                  </button>
+                ))}
             </div>
           </div>
         </div>

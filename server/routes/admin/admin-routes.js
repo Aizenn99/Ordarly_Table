@@ -43,9 +43,14 @@ router.post("/upload-image", upload.single("image"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }
-  const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${
-    req.file.filename
-  }`;
+
+  // ✅ Properly get and clean IPv4 address
+  const rawIp = req.socket.localAddress;
+  const cleanedIp = rawIp.replace("::ffff:", "") === "::1" ? "localhost" : rawIp.replace("::ffff:", "");
+
+const imageUrl = `/uploads/${req.file.filename}`; // ✅ just the relative path
+
+  console.log("🖼️ Image URL:", imageUrl);
 
   res.status(200).json({ message: "File uploaded successfully", imageUrl });
 });

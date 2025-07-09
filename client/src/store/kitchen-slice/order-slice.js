@@ -13,7 +13,7 @@ export const sendToKitchen = createAsyncThunk(
   async (orderData, thunkAPI) => {
     try {
       const res = await axios.post(
-        "http://localhost:8000/api/kitchen/send",
+        `${import.meta.env.VITE_API_URL}/api/kitchen/send`,
         orderData
       );
       return res.data;
@@ -33,7 +33,7 @@ export const markItemsAsSentToKitchen = createAsyncThunk(
       console.log("Calling API for table:", tableName); // 🪵 debug log
 
       const response = await axios.patch(
-        `http://localhost:8000/api/kitchen/cart/${tableName}/kot-sent`
+        `${import.meta.env.VITE_API_URL}/api/kitchen/cart/${tableName}/kot-sent`
       );
       return response.data;
     } catch (error) {
@@ -51,7 +51,7 @@ export const fetchKitchenOrders = createAsyncThunk(
   "kitchen/fetchKitchenOrders",
   async (_, thunkAPI) => {
     try {
-      const res = await axios.get("http://localhost:8000/api/kitchen/orders");
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/kitchen/orders`);
       return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(
@@ -67,7 +67,7 @@ export const updateKOTStatus = createAsyncThunk(
   async ({ kotNumber, status }, thunkAPI) => {
     try {
       const res = await axios.patch(
-        `http://localhost:8000/api/kitchen/${kotNumber}/status`,
+        `${import.meta.env.VITE_API_URL}/api/kitchen/${kotNumber}/status`,
         { status }
       );
       return res.data;

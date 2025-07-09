@@ -1,9 +1,9 @@
 const Bill = require("../../models/Bill");
 const ItemCart = require("../../models/ItemCart");
 const MenuItem = require("../../models/menuitem");
-const {getNextBillNumber} = require("../../helper/utils")
+const { getNextBillNumber } = require("../../helper/utils");
 
-
+// 1. Generate Bill
 exports.generateBill = async (req, res) => {
   try {
     const { tableName, spaceName, paymentMethod } = req.body;
@@ -11,6 +11,7 @@ exports.generateBill = async (req, res) => {
     if (!tableName || !spaceName || !paymentMethod) {
       return res.status(400).json({ message: "Missing required fields." });
     }
+
     console.log("Generating bill for table:", tableName, "in space:", spaceName);
 
     const cart = await ItemCart.findOne({ tableName }).populate("items.itemId");
@@ -48,9 +49,10 @@ exports.generateBill = async (req, res) => {
         charges,
         totalAmount,
         status: "UNPAID",
-        paymentMethod, // ✅ Required field
+        paymentMethod,
+        createdBy: req.user?.userName, // ✅ Add creator
       });
-
+   
       try {
         await bill.save();
         break;
@@ -64,9 +66,7 @@ exports.generateBill = async (req, res) => {
     }
 
     if (attempts === maxAttempts) {
-      return res
-        .status(500)
-        .json({ message: "Could not generate unique bill number" });
+      return res.status(500).json({ message: "Could not generate unique bill number" });
     }
 
     await ItemCart.deleteOne({ tableName });
@@ -81,14 +81,36 @@ exports.generateBill = async (req, res) => {
   }
 };
 
-
-
-// 2. Get all bills
+// 2. Get Bills Only Created By Logged-In Staff
 exports.getAllBills = async (req, res) => {
+  try {
+    console.log("🔐 Authenticated user in getAllBills:", req.user);
+
+    const userName = req.user?.userName;
+    if (!userName) {
+      console.warn("❌ No userName found in req.user");
+      return res.status(401).json({ message: "Unauthorized: No user info" });
+    }
+
+    const bills = await Bill.find({ createdBy: userName }).sort({ createdAt: -1 });
+
+    console.log(`🎯 Found ${bills.length} bills for user: ${userName}`);
+
+    res.status(200).json(bills);
+  } catch (error) {
+    console.error("❌ Error fetching staff bills:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+// 3. Get all bills
+exports.getAllBillsAdmin = async (req, res) => {
   try {
     const bills = await Bill.find().sort({ createdAt: -1 });
     res.status(200).json(bills);
   } catch (error) {
+    console.error("Error fetching staff bills:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -110,11 +132,10 @@ exports.getBillByNumber = async (req, res) => {
 };
 
 // 4. Mark bill as PAID
-// 4. Mark bill as PAID
 exports.markBillAsPaid = async (req, res) => {
   try {
     const { billNumber } = req.params;
-    const { paymentMethod } = req.body; // 👈 Get from request body
+    const { paymentMethod } = req.body;
 
     if (!["CASH", "UPI", "CARD", "CREDIT"].includes(paymentMethod)) {
       return res.status(400).json({ message: "Invalid or missing payment method" });
@@ -122,7 +143,7 @@ exports.markBillAsPaid = async (req, res) => {
 
     const bill = await Bill.findOneAndUpdate(
       { billNumber: parseInt(billNumber) },
-      { status: "PAID", paymentMethod }, // 👈 Save it here
+      { status: "PAID", paymentMethod },
       { new: true }
     );
 
@@ -132,8 +153,7 @@ exports.markBillAsPaid = async (req, res) => {
 
     const io = req.app.get("io");
     io.emit("bill-paid", bill);
-        io.emit("dashboard:update");
-
+    io.emit("dashboard:update");
 
     res.status(200).json({ message: "Bill marked as PAID", bill });
   } catch (error) {
@@ -141,8 +161,7 @@ exports.markBillAsPaid = async (req, res) => {
   }
 };
 
-
-// 5. Delete a bill (if needed)
+// 5. Delete a bill
 exports.deleteBill = async (req, res) => {
   try {
     const { billNumber } = req.params;

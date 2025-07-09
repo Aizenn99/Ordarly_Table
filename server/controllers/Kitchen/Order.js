@@ -1,10 +1,8 @@
 const KitchenOrder = require("../../models/KitchenOrder");
-const {getNextKOTNumber} = require("../../helper/utils");
+const { getNextKOTNumber } = require("../../helper/utils");
 const Cart = require("../../models/ItemCart");
 
-// @desc   Send order to kitchen
-// @route  POST /api/kitchen/send
-// @access Public (or protect later if needed)
+// ✅ Send order to kitchen
 exports.sendToKitchen = async (req, res) => {
   try {
     const { tableName, spaceName, guestCount, items, username } = req.body;
@@ -24,7 +22,7 @@ exports.sendToKitchen = async (req, res) => {
       username,
     });
 
-    // Emit to kitchen via socket.io (optional)
+    // ✅ Emit new KOT to kitchen
     if (req.io) {
       req.io.emit("new-kot", newOrder);
     }
@@ -36,6 +34,7 @@ exports.sendToKitchen = async (req, res) => {
   }
 };
 
+// ✅ Mark items as sent
 exports.markKOTItemsSent = async (req, res) => {
   const { tableName } = req.params;
 
@@ -47,7 +46,6 @@ exports.markKOTItemsSent = async (req, res) => {
     }
 
     cart.items.forEach((item) => {
-      // Update sentQuantity only if new quantity is added
       if (item.quantity > item.sentQuantity) {
         item.sentQuantity = item.quantity;
       }
@@ -55,17 +53,14 @@ exports.markKOTItemsSent = async (req, res) => {
 
     await cart.save();
 
-    return res.status(200).json({ message: "Items marked as sent to kitchen" });
+    res.status(200).json({ message: "Items marked as sent to kitchen" });
   } catch (error) {
     console.error("Failed to mark KOT items:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-
-
-// @desc   Get all pending/preparing kitchen orders
-// @route  GET /api/kitchen/orders
+// ✅ Get active kitchen orders
 exports.getKitchenOrders = async (req, res) => {
   try {
     const orders = await KitchenOrder.find({
@@ -79,8 +74,7 @@ exports.getKitchenOrders = async (req, res) => {
   }
 };
 
-// @desc   Update status of a KOT (e.g., to 'preparing' or 'ready')
-// @route  PATCH /api/kitchen/:kotNumber/status
+// ✅ Update KOT status — no kot-ready emit here
 exports.updateKOTStatus = async (req, res) => {
   try {
     const { kotNumber } = req.params;
@@ -101,14 +95,7 @@ exports.updateKOTStatus = async (req, res) => {
       return res.status(404).json({ error: "Kitchen Order not found." });
     }
 
-    // Notify staff when ready
-    if (status === "ready" && req.io) {
-      req.io.emit("kot-ready", {
-        kotNumber: updatedOrder.kotNumber,
-        username: updatedOrder.username,
-        message: `Order for table ${updatedOrder.tableName} is ready.`,
-      });
-    }
+    // ⚠️ Don't emit kot-ready here (frontend now sends it with selected items)
 
     res.json(updatedOrder);
   } catch (error) {

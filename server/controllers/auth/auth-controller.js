@@ -2,8 +2,9 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../../models/user");
 
-//Register User Controller
-
+// ===============================
+// ✅ Register User Controller
+// ===============================
 const registerUser = async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -47,18 +48,25 @@ const registerUser = async (req, res) => {
   }
 };
 
-//Login User Controller
+// ===============================
+// ✅ Login User Controller
+// ===============================
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
+
   try {
     const checkUser = await User.findOne({ email });
+
     if (!checkUser) {
       return res.status(404).json({ message: "User not found" });
     }
+
     const isPasswordValid = await bcrypt.compare(password, checkUser.password);
+
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid password" });
     }
+
     const token = jwt.sign(
       {
         userId: checkUser._id,
@@ -71,64 +79,95 @@ const loginUser = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "None",
-      path: "/", }).json({
-      success: true,
-      message: "login successfully",
-
-      user: {
-        email: checkUser.email,
-        role: checkUser.role,
-        id: checkUser._id,
-        userName: checkUser.username,
-        token: token,
-      },
-    });
+    res
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: false, // ✅ for localhost only
+        sameSite: "Lax", // ✅ for localhost
+        path: "/",
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
+      })
+      .json({
+        success: true,
+        message: "Login successful",
+        user: {
+          email: checkUser.email,
+          role: checkUser.role,
+          id: checkUser._id,
+          userName: checkUser.username,
+          token: token,
+        },
+      });
   } catch (error) {
-    console.error(error);
+    console.error("Login Error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-//Logout User
-
+// ===============================
+// ✅ Logout Controller
+// ===============================
 const LogoutUser = (req, res) => {
-  res.clearCookie("token").status(200).json({
-    success: true,
-    message: "Logged out successfully!",
-  });
+  res
+    .clearCookie("token", {
+      httpOnly: true,
+      secure: false, // ✅ match how it was set
+      sameSite: "Lax", // ✅ match how it was set
+      path: "/",
+    })
+    .status(200)
+    .json({
+      success: true,
+      message: "Logged out successfully!",
+    });
 };
 
-
-
-//auth middleware
-
+// ===============================
+// ✅ Auth Middleware
+// ===============================
+// ===============================
+// ✅ Auth Middleware (Fixed)
+// ===============================
 const authMiddleWare = async (req, res, next) => {
   const token = req.cookies.token;
 
+  console.log("Auth Middleware Cookies:", req.cookies); // 🧪 Debug
+
   if (!token) {
-    return res
-      .status(401)
-      .json({ success: false, message: "Unauthorized: No token provided" });
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized: No token provided",
+    });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "your_default_fallback_secret"
+    );
+
+    req.user = decoded; // ✅ Properly set user from token payload
     next();
   } catch (error) {
-    console.error("Auth Error:", error);
+    console.error("Auth Middleware Error:", error);
+
     res.clearCookie("token", {
       httpOnly: true,
-      secure: true,
-      sameSite: "None",
+      secure: false,
+      sameSite: "Lax",
       path: "/",
-    }); // Ensure invalid token is removed
+    });
 
-    return res
-      .status(403)
-      .json({ success: false, message: "Unauthorized: Invalid token" });
+    return res.status(403).json({
+      success: false,
+      message: "Unauthorized: Invalid token",
+    });
   }
 };
 
-module.exports = { loginUser, authMiddleWare, registerUser , LogoutUser};
+module.exports = {
+  loginUser,
+  registerUser,
+  LogoutUser,
+  authMiddleWare,
+};

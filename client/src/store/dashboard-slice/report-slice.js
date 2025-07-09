@@ -6,7 +6,7 @@ export const fetchDashboardMetrics = createAsyncThunk(
   "dashboard/fetchMetrics",
   async ({ startDate, endDate }, thunkAPI) => {
     try {
-      const response = await axios.get("http://localhost:8000/api/dashboard/metrics", {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/dashboard/metrics`, {
         params: { startDate, endDate }, // ✅ Automatically encoded
       });
       return response.data;

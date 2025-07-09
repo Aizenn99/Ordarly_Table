@@ -14,7 +14,7 @@ export const addMenuItem = createAsyncThunk(
   "admin/add-menu-item",
   async (formdata) => {
     const result = await axios.post(
-      "http://localhost:8000/api/admin/add-menu",
+      `${import.meta.env.VITE_API_URL}/api/admin/add-menu`,
       formdata
     );
     return result?.data;
@@ -22,7 +22,7 @@ export const addMenuItem = createAsyncThunk(
 );
 
 export const getMenuItem = createAsyncThunk("admin/get-menu-item", async () => {
-  const result = await axios.get("http://localhost:8000/api/admin/fetch-menu", {
+  const result = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/fetch-menu`, {
     headers: { "Content-Type": "application/json" },
   });
   return result?.data;
@@ -32,7 +32,7 @@ export const deleteMenuItem = createAsyncThunk(
   "admin/delete-menu-item",
   async (id) => {
     const result = await axios.delete(
-      `http://localhost:8000/api/admin/delete-menu/${id}`,
+      `${import.meta.env.VITE_API_URL}/api/admin/delete-menu/${id}`,
       { headers: { "Content-Type": "application/json" } }
     );
     return result?.data;
@@ -43,7 +43,7 @@ export const updateMenuItem = createAsyncThunk(
   "admin/update-menu-item",
   async ({ id, formdata }) => {
     const result = await axios.put(
-      `http://localhost:8000/api/admin/update-menu/${id}`,
+      `${import.meta.env.VITE_API_URL}/api/admin/update-menu/${id}`,
       formdata,
       { headers: { "Content-Type": "multipart/form-data" } }
     );
@@ -57,7 +57,7 @@ export const addcategory = createAsyncThunk(
   "admin/add-category",
   async (formdata) => {
     const result = await axios.post(
-      "http://localhost:8000/api/admin/add-category",
+      `${import.meta.env.VITE_API_URL}/api/admin/add-category`,
       formdata
     );
     return result?.data;
@@ -68,7 +68,7 @@ export const fetchCategories = createAsyncThunk(
   "admin/fetch-categories",
   async () => {
     const result = await axios.get(
-      "http://localhost:8000/api/admin/fetch-categories",
+      `${import.meta.env.VITE_API_URL}/api/admin/fetch-categories`,
       { headers: { "Content-Type": "application/json" } }
     );
     return result?.data;
@@ -79,7 +79,7 @@ export const deletecategory = createAsyncThunk(
   "admin/delete-category",
   async (id) => {
     const result = await axios.delete(
-      `http://localhost:8000/api/admin/delete-category/${id}`,
+      `${import.meta.env.VITE_API_URL}/api/admin/delete-category/${id}`,
       { headers: { "Content-Type": "application/json" } }
     );
     return result?.data;
@@ -92,7 +92,7 @@ export const addSubCategory = createAsyncThunk(
   "admin/add-subcategory",
   async (formdata) => {
     const result = await axios.post(
-      "http://localhost:8000/api/admin/add-subcategory",
+      `${import.meta.env.VITE_API_URL}/api/admin/add-subcategory`,
       formdata
     );
     return result?.data;
@@ -103,7 +103,7 @@ export const fetchSubCategory = createAsyncThunk(
   "admin/fetch-subcategory",
   async () => {
     const result = await axios.get(
-      "http://localhost:8000/api/admin/fetch-subcategories",
+      `${import.meta.env.VITE_API_URL}/api/admin/fetch-subcategories`,
       { headers: { "Content-Type": "application/json" } }
     );
     return result?.data;
@@ -114,7 +114,7 @@ export const deleteSubCategory = createAsyncThunk(
   "admin/delete-subcategory",
   async (id) => {
     const result = await axios.delete(
-      `http://localhost:8000/api/admin/delete-subcategory/${id}`,
+      `${import.meta.env.VITE_API_URL}/api/admin/delete-subcategory/${id}`,
       { headers: { "Content-Type": "application/json" } }
     );
     return result?.data;

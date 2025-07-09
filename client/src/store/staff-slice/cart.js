@@ -13,7 +13,7 @@ export const addItemToCart = createAsyncThunk(
   async (formdata, thunkAPI) => {
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/staff/cart/add-up",
+        `${import.meta.env.VITE_API_URL}/api/staff/cart/add-up`,
         formdata,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -30,7 +30,7 @@ export const getCartByTable = createAsyncThunk(
   async (tableName, thunkAPI) => {
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/staff/cart/${tableName}`
+        `${import.meta.env.VITE_API_URL}/api/staff/cart/${tableName}`
       );
       return response.data;
     } catch (error) {
@@ -45,7 +45,7 @@ export const removeItemFromCart = createAsyncThunk(
   async ({ tableName, itemId }, thunkAPI) => {
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/staff/cart/remove-item",
+        `${import.meta.env.VITE_API_URL}/api/staff/cart/remove-item`,
         { tableName, itemId },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -62,7 +62,7 @@ export const clearCartByTable = createAsyncThunk(
   async (tableName, thunkAPI) => {
     try {
       const response = await axios.delete(
-        `http://localhost:8000/api/staff/cart/clear/${tableName}`
+        `${import.meta.env.VITE_API_URL}/api/staff/cart/clear/${tableName}`
       );
       return tableName;
     } catch (error) {

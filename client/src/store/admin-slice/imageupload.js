@@ -6,7 +6,7 @@ const uploadImage = async (imageFile) => {
 
   try {
     const response = await axios.post(
-      "http://localhost:8000/api/admin/upload-image", // ✅ make sure this matches your backend
+      `${import.meta.env.VITE_API_URL}/api/admin/upload-image`, // ✅ make sure this matches your backend
       formData,
       {
         headers: {

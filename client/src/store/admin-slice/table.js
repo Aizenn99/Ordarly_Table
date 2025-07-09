@@ -12,7 +12,7 @@ const initialState = {
 // ✅ Get Tables
 export const getTable = createAsyncThunk("admin/get-table", async () => {
   const result = await axios.get(
-    "http://localhost:8000/api/admin/fetch-tables",
+    `${import.meta.env.VITE_API_URL}/api/admin/fetch-tables`,
     {
       headers: {
         "Content-Type": "application/json",
@@ -27,7 +27,7 @@ export const addTable = createAsyncThunk(
   "admin/add-table",
   async (formData) => {
     const result = await axios.post(
-      "http://localhost:8000/api/admin/add-table",
+      `${import.meta.env.VITE_API_URL}/api/admin/add-table`,
       formData
     );
     return result.data; // full payload
@@ -39,7 +39,7 @@ export const updateTable = createAsyncThunk(
   "admin/update-table",
   async ({ id, formdata }) => {
     const result = await axios.put(
-      `http://localhost:8000/api/admin/update-table/${id}`,
+      `${import.meta.env.VITE_API_URL}/api/admin/update-table/${id}`,
       formdata,
       {
         headers: {
@@ -56,7 +56,7 @@ export const deleteTable = createAsyncThunk(
   "admin/delete-table",
   async (id) => {
     const result = await axios.delete(
-      `http://localhost:8000/api/admin/delete-table/${id}`,
+      `${import.meta.env.VITE_API_URL}/api/admin/delete-table/${id}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +72,7 @@ export const addSpaces = createAsyncThunk(
   "admin/add-spaces",
   async (formdata) => {
     const result = await axios.post(
-      "http://localhost:8000/api/admin/add-spaces",
+      `${import.meta.env.VITE_API_URL}/api/admin/add-spaces`,
       formdata
     );
     return result.data;
@@ -82,7 +82,7 @@ export const addSpaces = createAsyncThunk(
 // ✅ Fetch Spaces
 export const fetchSpaces = createAsyncThunk("admin/fetch-spaces", async () => {
   const result = await axios.get(
-    "http://localhost:8000/api/admin/fetch-spaces",
+    `${import.meta.env.VITE_API_URL}/api/admin/fetch-spaces`,
     {
       headers: {
         "Content-Type": "application/json",

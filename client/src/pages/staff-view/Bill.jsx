@@ -17,9 +17,10 @@ const StaffBill = () => {
   const { bills } = useSelector((state) => state.staffBill);
 
   useEffect(() => {
-    dispatch(getAllBills());
-    console.log("Fetching all bills...", bills);
-  }, [dispatch]);
+  dispatch(getAllBills()).then((res) => {
+    console.log("🎯 All bills fetched:", res.payload);
+  });
+}, [dispatch]);
 
   const totalBills = bills.length;
   const paidBills = bills.filter(

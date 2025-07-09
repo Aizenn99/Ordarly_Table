@@ -35,6 +35,21 @@ const StaffMenu = () => {
     const saved = localStorage.getItem("cart_quantities");
     return saved ? JSON.parse(saved) : {};
   });
+  const apiBaseURL = import.meta.env.VITE_API_URL; // Make sure it's set to IP
+  const fixImageURL = (url) => {
+    // If it's already a full URL but has localhost, replace with actual IP
+    if (url?.startsWith("http://localhost")) {
+      return url.replace("http://localhost:8000", import.meta.env.VITE_API_URL);
+    }
+
+    // If it's a relative URL like /uploads/...
+    if (url?.startsWith("/uploads")) {
+      return `${import.meta.env.VITE_API_URL}${url}`;
+    }
+
+    // Else return as is
+    return url || "/placeholder.png";
+  };
 
   const [openCart, setopenCart] = useState(false);
   const [cartItems, setCartItems] = useState([]);
@@ -247,39 +262,38 @@ const StaffMenu = () => {
     }
   };
 
- const handleGenerateBill = () => {
-  if (!state?.tableName) {
-    toast.error("Please select the table first");
-    return;
-  }
+  const handleGenerateBill = () => {
+    if (!state?.tableName) {
+      toast.error("Please select the table first");
+      return;
+    }
 
-  dispatch(
-    generateBill({
-      tableName: state.tableName,
-      spaceName: state.spaceName,
-      paymentMethod: "CASH", // ✅ Required for backend
-    })
-  )
-    .unwrap()
-    .then(() => {
-      toast.success("Bill generated successfully");
+    dispatch(
+      generateBill({
+        tableName: state.tableName,
+        spaceName: state.spaceName,
+        paymentMethod: "CASH", // ✅ Required for backend
+      })
+    )
+      .unwrap()
+      .then(() => {
+        toast.success("Bill generated successfully");
 
-      // 🧹 Clear localStorage data
-      localStorage.removeItem("cart_quantities");
+        // 🧹 Clear localStorage data
+        localStorage.removeItem("cart_quantities");
 
-      const guestInfoMap = JSON.parse(localStorage.getItem("guestInfoMap")) || {};
-      delete guestInfoMap[state.tableName];
-      localStorage.setItem("guestInfoMap", JSON.stringify(guestInfoMap));
+        const guestInfoMap =
+          JSON.parse(localStorage.getItem("guestInfoMap")) || {};
+        delete guestInfoMap[state.tableName];
+        localStorage.setItem("guestInfoMap", JSON.stringify(guestInfoMap));
 
-      setopenCart(false);
-      setCart(null);
-      setQuantities({});
-      setCartItems([]);
-    })
-    .catch(() => toast.error("Failed to generate bill"));
-};
-
-
+        setopenCart(false);
+        setCart(null);
+        setQuantities({});
+        setCartItems([]);
+      })
+      .catch(() => toast.error("Failed to generate bill"));
+  };
 
   const filteredMenuItem = Array.isArray(menuItem)
     ? menuItem.filter((item) => {
@@ -416,30 +430,52 @@ const StaffMenu = () => {
               </div>
             </div>
           </div>
-
           <div className="w-full max-w-[380px] sm:max-w-full">
             <h2 className="font-semibold sticky top-0 z-9 text-md p-1 bg-gray-100 px-4">
               Sub Categories
             </h2>
             <div className="overflow-x-auto scrollbar-hide w-full">
               <div className="flex gap-3 px-2 pb-2 w-max">
-                {subcats.map((sub) => (
-                  <button
-                    key={sub._id}
-                    onClick={() =>
-                      setSelectedSubCategory(
-                        sub.name === selectedSubCategory ? null : sub.name
-                      )
+                {subcats
+                  .filter((sub) => {
+                    if (selectedCategory) {
+                      // When a category is selected, only show subcategories with items under that category
+                      const category = menucategoris.find(
+                        (cat) => cat.name === selectedCategory
+                      );
+                      if (!category) return false;
+
+                      return menuItem.some(
+                        (item) =>
+                          item.category?.toString() ===
+                            category._id?.toString() &&
+                          item.subcategory?.toString() === sub._id?.toString()
+                      );
+                    } else {
+                      // When no category is selected, show subcategories that have any items
+                      return menuItem.some(
+                        (item) =>
+                          item.subcategory?.toString() === sub._id?.toString()
+                      );
                     }
-                    className={`p-2 rounded-lg text-sm shadow transition whitespace-nowrap border ${
-                      selectedSubCategory === sub.name
-                        ? "bg-primary1 text-white border-primary1"
-                        : "bg-[#E3F4F4] text-primary1 border-primary1"
-                    }`}
-                  >
-                    {sub.name}
-                  </button>
-                ))}
+                  })
+                  .map((sub) => (
+                    <button
+                      key={sub._id}
+                      onClick={() =>
+                        setSelectedSubCategory(
+                          sub.name === selectedSubCategory ? null : sub.name
+                        )
+                      }
+                      className={`p-2 rounded-lg text-sm shadow transition whitespace-nowrap border ${
+                        selectedSubCategory === sub.name
+                          ? "bg-primary1 text-white border-primary1"
+                          : "bg-[#E3F4F4] text-primary1 border-primary1"
+                      }`}
+                    >
+                      {sub.name}
+                    </button>
+                  ))}
               </div>
             </div>
           </div>
@@ -460,10 +496,11 @@ const StaffMenu = () => {
                 >
                   <img
                     onClick={() => handleItemClick(item)}
-                    src={item.imageURL || "/placeholder.png"}
+                    src={fixImageURL(item.imageURL)}
                     alt={item.title || "Item"}
                     className="w-full h-36 object-cover rounded-t-xl"
                   />
+
                   <div className="p-3 flex flex-col justify-between flex-1">
                     <div>
                       <h3 className="font-semibold text-md text-gray-800 mb-1">
@@ -531,7 +568,7 @@ const StaffMenu = () => {
         </button>
       </div>
       <Sheet onOpenChange={setopenCart} open={openCart}>
-        <SheetContent className="w-96" side="right">
+        <SheetContent className="w-96 overflow-auto" side="right">
           <SheetHeader>
             <div className="flex items-center mt-8 justify-between">
               <span className="text-sm font-semibold text-black">
@@ -658,17 +695,18 @@ const StaffMenu = () => {
 
       <Sheet onOpenChange={setOpenMenu} open={openMenu}>
         <SheetContent
-          className="h-2/3 rounded-t-xl p-3 bg-[#E3F4F4]"
+          className="h-2/3 rounded-t-xl overflow-auto p-3 bg-[#E3F4F4]"
           side="bottom"
         >
           {selectedItem && (
             <div className="flex flex-col h-full gap-3">
               <div className="bg-white rounded-xl p-4">
                 <img
-                  src={selectedItem.imageURL || "/placeholder.png"}
+                  src={fixImageURL(selectedItem.imageURL)}
                   alt={selectedItem.title}
                   className="w-full h-54 object-cover rounded-3xl"
                 />
+
                 <div className="flex items-center gap-2 mt-3">
                   {(() => {
                     const category = menucategoris.find(

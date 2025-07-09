@@ -21,13 +21,21 @@ import { CalendarDateRangePicker } from "@/components/ui/date-range-picker";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { startOfDay, endOfDay, subDays, format } from "date-fns";
+import { FaArrowTrendUp } from "react-icons/fa6";
+import { MdOutlineNoFood } from "react-icons/md";
+import { GrMoney } from "react-icons/gr";
+import InfoCardReport from "@/components/common/cardreport";
+import { FcGoogle } from "react-icons/fc";
+import { FaMoneyBillWave, FaMoneyCheck } from "react-icons/fa";
 
-const socket = io("http://localhost:8000", {
+const socket = io(`${import.meta.env.VITE_API_URL}`, {
   transports: ["websocket"],
   autoConnect: true,
   reconnection: true,
 });
 
+const BarColors = ["#8b5cf6", "#78716c", "#4f46e5"];
+// Purple for Revenue, Stone for Sales, Indigo for Profit
 const COLORS = ["#22c55e", "#3b82f6", "#f97316"];
 
 const AdminReports = () => {
@@ -76,7 +84,8 @@ const AdminReports = () => {
 
   const handleDateChange = (filter) => {
     setDateFilter(filter);
-    let from, to = new Date();
+    let from,
+      to = new Date();
 
     switch (filter) {
       case "today":
@@ -108,8 +117,9 @@ const AdminReports = () => {
 
   const barData = [
     { name: "Revenue", value: metrics?.totalRevenue || 0 },
+     { name: "Profit", value: metrics?.totalProfit || 0 },
     { name: "Sales", value: metrics?.totalSales || 0 },
-    { name: "Profit", value: metrics?.totalProfit || 0 },
+   
   ];
 
   const pieData = [
@@ -120,13 +130,12 @@ const AdminReports = () => {
 
   // Simulated revenue trend data (Replace with actual if available)
   const revenueTrend = (metrics?.revenueTrend || []).map((item) => ({
-  date: format(new Date(item.date), "dd MMM"), // Format to "27 Jun" etc.
-  revenue: item.revenue,
-}));
-
+    date: format(new Date(item.date), "dd MMM"), // Format to "27 Jun" etc.
+    revenue: item.revenue,
+  }));
 
   return (
-    <div className="p-5 bg-[#f3f6f9] min-h-screen">
+    <div className="p-5 bg-[#f3f6f9] rounded-lg min-h-screen">
       {/* Date Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
@@ -158,20 +167,72 @@ const AdminReports = () => {
       {/* Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 mt-4">
         {[
-          { label: "Total Revenue", value: metrics?.totalRevenue, color: "text-green-600" },
-          { label: "Total Orders", value: metrics?.totalOrders, color: "text-black" },
-          { label: "Cash", value: metrics?.paymentBreakdown?.cash, color: "text-primary" },
-          { label: "UPI / Card", value: metrics?.paymentBreakdown?.upiCard, color: "text-blue-600" },
-          { label: "Credit", value: metrics?.paymentBreakdown?.credit, color: "text-orange-600" },
-          { label: "Profits", value: metrics?.totalProfit, color: "text-purple-600" },
-          { label: "Total Sales", value: metrics?.totalSales, color: "text-green-700" },
-        ].map(({ label, value, color }, i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
-              <p className="text-sm text-gray-500">{label}</p>
-              <h3 className={`text-lg font-semibold ${color}`}>₹{value || 0}</h3>
-            </CardContent>
-          </Card>
+          {
+            label: "Total Revenue",
+            value: metrics?.totalRevenue,
+            iconBg: "bg-purple-100",
+            iconText: "text-purple-600",
+            icon: <FaArrowTrendUp />,
+            text: "text-purple-600",
+          },
+          {
+            label: "Total Orders",
+            value: metrics?.totalOrders,
+            iconBg: "bg-red-100",
+            iconText: "text-red-600",
+            icon: <MdOutlineNoFood />,
+            text: "text-red-600",
+          },
+          {
+            label: "Cash",
+            value: metrics?.paymentBreakdown?.cash,
+            iconBg: "bg-green-100",
+            iconText: "text-green-600",
+            text: "text-green-600",
+            icon: <FaMoneyBillWave />,
+          },
+          {
+            label: "UPI ",
+            value: metrics?.paymentBreakdown?.upiCard,
+            iconBg: "bg-blue-100",
+            iconText: "text-blue-600",
+            text: "text-blue-600",
+            icon: <FcGoogle />,
+          },
+          {
+            label: "Credit",
+            value: metrics?.paymentBreakdown?.credit,
+            iconBg: "bg-beige",
+            iconText: "text-yellow-600",
+            text: "text-yellow-600",
+            icon: <FaMoneyCheck />,
+          },
+          {
+            label: "Profits",
+            value: metrics?.totalProfit,
+            iconBg: "bg-[#4f46e5]/10",
+            iconText: "text-[#4f46e5]",
+            text: "text-[#4f46e5]",
+            icon: <GrMoney />,
+          },
+          {
+            label: "Total Sales",
+            value: metrics?.totalSales,
+            iconBg: "bg-stone-100",
+            iconText: "text-stone-600",
+            text: "text-stone-600",
+            icon: <FaArrowTrendUp />,
+          },
+        ].map(({ label, value, icon, iconBg, iconText, text }, i) => (
+          <InfoCardReport
+            key={i}
+            label={label}
+            value={value}
+            iconBg={iconBg}
+            iconText={iconText}
+            icon={icon}
+            text={text}
+          />
         ))}
       </div>
 
@@ -179,14 +240,21 @@ const AdminReports = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardContent className="p-4">
-            <h2 className="text-md font-semibold mb-4">Overview (Bar Chart)</h2>
+            <h2 className="text-md font-semibold mb-4">Overview </h2>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={barData}>
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="value" fill="#4f46e5" />
+                <Bar dataKey="value">
+                  {barData.map((_, index) => (
+                    <Cell
+                      key={index}
+                      fill={BarColors[index % BarColors.length]}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -194,7 +262,9 @@ const AdminReports = () => {
 
         <Card>
           <CardContent className="p-4">
-            <h2 className="text-md font-semibold mb-4">Payment Method Split (Pie Chart)</h2>
+            <h2 className="text-md font-semibold mb-4">
+              Payment Method Split{" "}
+            </h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -218,38 +288,43 @@ const AdminReports = () => {
       </div>
 
       {/* Area Chart for Revenue */}
-     <div className="mt-8">
-  <Card>
-    <CardContent className="p-4">
-      <h2 className="text-md font-semibold mb-4">Revenue Over Time</h2>
-      <ResponsiveContainer width="100%" height={300}>
-        <AreaChart
-          data={revenueTrend}
-          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-        >
-          <defs>
-            <linearGradient id="purpleRevenue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <XAxis dataKey="date" />
-          <YAxis />
-          <CartesianGrid strokeDasharray="3 3" />
-          <Tooltip />
-          <Area
-            type="monotone"
-            dataKey="revenue"
-            stroke="#8b5cf6"
-            fillOpacity={1}
-            fill="url(#purpleRevenue)"
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </CardContent>
-  </Card>
-</div>
-
+      <div className="mt-8">
+        <Card>
+          <CardContent className="p-4">
+            <h2 className="text-md font-semibold mb-4">Revenue Over Time</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart
+                data={revenueTrend}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient
+                    id="purpleRevenue"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="date" />
+                <YAxis />
+                <CartesianGrid strokeDasharray="3 3" />
+                <Tooltip />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#8b5cf6"
+                  fillOpacity={1}
+                  fill="url(#purpleRevenue)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

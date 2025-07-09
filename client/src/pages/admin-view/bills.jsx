@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllBills } from "@/store/staff-slice/Bill";
+import {  getAllBillsAdmin } from "@/store/staff-slice/Bill";
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import io from "socket.io-client";
 
-const socket = io("http://localhost:8000"); // Replace with your backend URL if deployed
+const socket = io(`${import.meta.env.VITE_API_URL}`); // Replace with your backend URL if deployed
 
 const AdminBills = () => {
   const dispatch = useDispatch();
@@ -33,7 +33,7 @@ const AdminBills = () => {
 
   useEffect(() => {
     socket.on("bill-paid", (updatedBill) => {
-      dispatch(getAllBills()); // ✅ re-fetch bills when a bill is marked as PAID
+      dispatch(getAllBillsAdmin()); // ✅ re-fetch bills when a bill is marked as PAID
       // Optionally show toast
       toast.success(`Bill #${updatedBill.billNumber} marked as PAID ✅`);
     });
@@ -44,13 +44,13 @@ const AdminBills = () => {
   }, []);
   // Load all bills initially
   useEffect(() => {
-    dispatch(getAllBills());
+    dispatch(getAllBillsAdmin());
   }, [dispatch]);
 
   // Socket listener for new bills
   useEffect(() => {
     socket.on("new-bill", () => {
-      dispatch(getAllBills()); // Fetch new bills without manual refresh
+      dispatch(getAllBillsAdmin()); // Fetch new bills without manual refresh
     });
 
     return () => {
