@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 8000;
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://172.20.10.4:5173"],
+    origin: ["http://localhost:5173", "http://192.168.31.23:5173"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   },
@@ -68,7 +68,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://172.20.10.4:5173"],
+    origin: ["http://localhost:5173", "http://192.168.31.23:5173"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   })
@@ -84,12 +84,14 @@ const adminRoutes = require("./routes/admin/admin-routes");
 const staffRoutes = require("./routes/Staff/Staff-routes");
 const kitchenRoutes = require("./routes/Kitchen/kitchen-routes")(io); // If kitchen uses socket
 const dashboardRoutes = require("./routes/dashboard/reports-routes");
+const settingsRoutes = require("./routes/admin/settings-routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/kitchen", kitchenRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // ✅ Health check
 app.get("/", (req, res) => {
@@ -98,5 +100,5 @@ app.get("/", (req, res) => {
 
 // ✅ Start server
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`🟢 Server is running on http://172.20.10.4:${PORT}`);
+  console.log(`🟢 Server is running on http://192.168.31.23:${PORT}`);
 });

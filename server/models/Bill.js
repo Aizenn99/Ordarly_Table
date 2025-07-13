@@ -43,17 +43,37 @@ const billSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    charges: {
+    tax: {
       type: Number,
       default: 0,
+    },
+    discount: {
+      type: Number,
+      default: 0,
+    },
+    serviceCharge: {
+      type: Number,
+      default: 0,
+    },
+    deliveryFee: {
+      type: Number,
+      default: 0,
+    },
+    packagingFee: {
+      type: Number,
+      default: 0,
+    },
+    roundOff: {
+      type: Number,
+      default: 0,
+    },
+    totalAmount: {
+      type: Number,
+      required: true,
     },
     paymentMethod: {
       type: String,
       enum: ["CASH", "CARD", "UPI", "CREDIT"],
-      required: true,
-    },
-    totalAmount: {
-      type: Number,
       required: true,
     },
     status: {
@@ -61,14 +81,30 @@ const billSchema = new mongoose.Schema(
       enum: ["PAID", "UNPAID"],
       default: "UNPAID",
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
+    createdBy: {
+      type: String,
     },
-     createdBy: {
-    type: String,
-    required: false, // or true if you want to enforce
-  },
+    settings: [
+      {
+        type: {
+          type: String,
+          required: true,
+        },
+        name: {
+          type: String,
+          required: true,
+        },
+        value: {
+          type: Number,
+          required: true,
+        },
+        unit: {
+          type: String,
+          enum: ["PERCENTAGE", "AMOUNT"],
+          required: true,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

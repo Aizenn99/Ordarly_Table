@@ -133,6 +133,123 @@ export const addTableFormControls = [
   },
 ];
 
+export const taxSettingsFormControls = [
+  {
+    label: "Tax Name",
+    name: "taxName",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter Tax Name",
+  },
+  {
+    label: "Tax Percentage",
+    name: "taxPercentage",
+    componentType: "input",
+    type: "number",
+    placeholder: "Enter Tax Percentage",
+  },
+]
+
+export const deliverySettingsFormControls = [
+  {
+    label: "Delivery Charge",
+    name: "deliveryCharge",
+    componentType: "input",
+    type: "number",
+    placeholder: "Enter Delivery Charge",
+  },
+  {
+    label: "Delivery Zones",
+    name: "deliveryZones",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter Delivery Zones (comma separated)",
+  },
+];
+
+export const DiscountSettingsFormControls = [
+  {
+    label: "Discount Name",
+    name: "discountName",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter Discount Name",
+  },
+  {
+    label: "Discount Percentage",
+    name: "discountPercentage",
+    componentType: "input",
+    type: "number",
+    placeholder: "Enter Discount Percentage",
+  },
+];
+
+export const PackageSettingsFormControls = [
+  {
+    label: "Package Name",
+    name: "packageName",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter Package Name",
+  },
+  {
+    label: "Package Price",
+    name: "packagePrice",
+    componentType: "input",
+    type: "number",
+    placeholder: "Enter Package Price",
+  },
+];
+
+export const serviceChargeSettingsFormControls = [
+  {
+    label: "Service Charge Name",
+    name: "serviceChargeName",
+    componentType: "input",
+    type: "text",
+    placeholder: "Charge Name",
+  },
+  {
+    label: "Service Charge Percentage",
+    name: "serviceChargePercentage",
+    componentType: "input",
+    type: "number",
+    placeholder: "Percentage",
+  },
+];
+
+export const receiptSettingstFormControls = [
+  {
+    label: "Receipt Header",
+    name: "receiptHeader",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter receipt header",
+  },
+  {
+    label: "Bussiness Number",
+    name: "bussinessNumber",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter business number",
+  },
+  {
+    label: "Receipt Address",
+    name: "receiptAddress",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter receipt address",
+
+  },
+  {
+    label: "Receipt Footer",
+    name: "receiptFooter",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter receipt footer",
+  },
+
+];
 
 
 export const addSpacesFormControls = [

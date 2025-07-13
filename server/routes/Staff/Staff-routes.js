@@ -14,6 +14,7 @@ const {
   getBillByNumber,
   getAllBillsAdmin,
   deleteBill,
+  editBill
 } = require("../../controllers/Staff/Bill");
 
 const { authMiddleWare } = require("../../controllers/auth/auth-controller");
@@ -30,5 +31,7 @@ router.get("/bills/admin", authMiddleWare, getAllBillsAdmin); // ✅ Admins only
 router.patch("/bill/mark-paid/:billNumber", authMiddleWare, markBillAsPaid);
 router.get("/bill/:billNumber", authMiddleWare, getBillByNumber);
 router.delete("/bill/:billNumber", authMiddleWare, deleteBill);
+router.put("bill/edit/:billNumber", authMiddleWare, editBill);
+
 
 module.exports = router;

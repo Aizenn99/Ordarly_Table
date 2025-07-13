@@ -13,11 +13,19 @@ const initialState = {
 // 1. Generate a new bill
 export const generateBill = createAsyncThunk(
   "bill/generateBill",
-  async ({ tableName, spaceName, paymentMethod }, thunkAPI) => {
+  async (
+    {
+      tableName,
+      spaceName,
+      paymentMethod,
+      overrides = {}, // Add overrides like { tax, discount } if needed
+    },
+    thunkAPI
+  ) => {
     try {
       const res = await axios.post(
         `${API}/api/staff/bill/generate`,
-        { tableName, spaceName, paymentMethod },
+        { tableName, spaceName, paymentMethod, ...overrides },
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
@@ -25,7 +33,9 @@ export const generateBill = createAsyncThunk(
       );
       return res.data.bill;
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response?.data || "Bill generation failed");
+      return thunkAPI.rejectWithValue(
+        error.response?.data || "Bill generation failed"
+      );
     }
   }
 );

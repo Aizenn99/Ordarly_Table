@@ -1,6 +1,8 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {  getAllBillsAdmin } from "@/store/staff-slice/Bill";
+import { getAllBillsAdmin } from "@/store/staff-slice/Bill";
 import {
   Table,
   TableBody,
@@ -15,50 +17,47 @@ import { subDays, isSameDay, isWithinInterval } from "date-fns";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import io from "socket.io-client";
+import { toast } from "react-hot-toast";
 
-const socket = io(`${import.meta.env.VITE_API_URL}`); // Replace with your backend URL if deployed
+const socket = io(`${import.meta.env.VITE_API_URL}`);
 
 const AdminBills = () => {
   const dispatch = useDispatch();
   const { bills } = useSelector((state) => state.staffBill);
 
   const [filteredBills, setFilteredBills] = useState([]);
+  const [selectedBill, setSelectedBill] = useState(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
   const [dateFilter, setDateFilter] = useState(
     localStorage.getItem("billDateFilter") || "today"
   );
+
   const [customRange, setCustomRange] = useState(() => {
     const storedRange = localStorage.getItem("billCustomRange");
     return storedRange ? JSON.parse(storedRange) : { from: null, to: null };
   });
 
   useEffect(() => {
+    dispatch(getAllBillsAdmin());
+  }, [dispatch]);
+
+  useEffect(() => {
+    socket.on("new-bill", () => {
+      dispatch(getAllBillsAdmin());
+    });
+
     socket.on("bill-paid", (updatedBill) => {
-      dispatch(getAllBillsAdmin()); // ✅ re-fetch bills when a bill is marked as PAID
-      // Optionally show toast
+      dispatch(getAllBillsAdmin());
       toast.success(`Bill #${updatedBill.billNumber} marked as PAID ✅`);
     });
 
     return () => {
+      socket.off("new-bill");
       socket.off("bill-paid");
     };
-  }, []);
-  // Load all bills initially
-  useEffect(() => {
-    dispatch(getAllBillsAdmin());
   }, [dispatch]);
 
-  // Socket listener for new bills
-  useEffect(() => {
-    socket.on("new-bill", () => {
-      dispatch(getAllBillsAdmin()); // Fetch new bills without manual refresh
-    });
-
-    return () => {
-      socket.off("new-bill");
-    };
-  }, [dispatch]);
-
-  // Apply filter when bills change or filter changes
   useEffect(() => {
     if (!bills) return;
     const today = new Date();
@@ -109,7 +108,6 @@ const AdminBills = () => {
     setFilteredBills(filtered);
   }, [bills, dateFilter, customRange]);
 
-  // Update localStorage when filter changes
   useEffect(() => {
     localStorage.setItem("billDateFilter", dateFilter);
   }, [dateFilter]);
@@ -124,24 +122,21 @@ const AdminBills = () => {
 
   return (
     <div className="p-2 space-y-4">
-      {/* NAVBAR FILTERS */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        {/* Left side filters */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-          {/* Date Buttons */}
           <div className="hidden sm:flex flex-wrap gap-2">
-            {[
-              { label: "Today", value: "today" },
-              { label: "Yesterday", value: "yesterday" },
-              { label: "Last 7 Days", value: "last7" },
-              { label: "Last 30 Days", value: "last30" },
-            ].map((item) => (
+            {["today", "yesterday", "last7", "last30"].map((value) => (
               <Button
-                key={item.value}
-                variant={dateFilter === item.value ? "default" : "outline"}
-                onClick={() => setDateFilter(item.value)}
+                key={value}
+                variant={dateFilter === value ? "default" : "outline"}
+                onClick={() => setDateFilter(value)}
               >
-                {item.label}
+                {value.charAt(0).toUpperCase() +
+                  value
+                    .slice(1)
+                    .replace("last", "Last ")
+                    .replace("today", "Today")
+                    .replace("yesterday", "Yesterday")}
               </Button>
             ))}
             <CalendarDateRangePicker
@@ -154,7 +149,6 @@ const AdminBills = () => {
           </div>
         </div>
 
-        {/* Right side: Excel + Hamburger */}
         <div className="flex items-center justify-between gap-2">
           <Button
             className="bg-yellow-600 text-white"
@@ -162,8 +156,6 @@ const AdminBills = () => {
           >
             Generate Excel
           </Button>
-
-          {/* Hamburger menu for small screens */}
           <div className="sm:hidden">
             <Sheet>
               <SheetTrigger asChild>
@@ -173,23 +165,19 @@ const AdminBills = () => {
               </SheetTrigger>
               <SheetContent side="left">
                 <div className="space-y-3 mt-5 p-4">
-                  {[
-                    { label: "Today", value: "today" },
-                    { label: "Yesterday", value: "yesterday" },
-                    { label: "Last 7 Days", value: "last7" },
-                    { label: "Last 30 Days", value: "last30" },
-                  ].map((item) => (
+                  {["today", "yesterday", "last7", "last30"].map((value) => (
                     <Button
-                      key={item.value}
+                      key={value}
                       className="w-full"
-                      variant={
-                        dateFilter === item.value ? "default" : "outline"
-                      }
-                      onClick={() => {
-                        setDateFilter(item.value);
-                      }}
+                      variant={dateFilter === value ? "default" : "outline"}
+                      onClick={() => setDateFilter(value)}
                     >
-                      {item.label}
+                      {value.charAt(0).toUpperCase() +
+                        value
+                          .slice(1)
+                          .replace("last", "Last ")
+                          .replace("today", "Today")
+                          .replace("yesterday", "Yesterday")}
                     </Button>
                   ))}
                 </div>
@@ -199,53 +187,218 @@ const AdminBills = () => {
         </div>
       </div>
 
-      {/* TABLE */}
       <div className="overflow-x-auto w-[360px] sm:w-full rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Sr No.</TableHead>
               <TableHead>Date</TableHead>
-              <TableHead>Space Name</TableHead>
-              <TableHead>Table Name</TableHead>
-              <TableHead>Guest Count</TableHead>
+              <TableHead>Space</TableHead>
+              <TableHead>Table</TableHead>
+              <TableHead>Guests</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredBills && filteredBills.length > 0 ? (
-              filteredBills.map((bill, index) => (
-                <TableRow key={bill._id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>
-                    {(() => {
-                      const date = new Date(bill.createdAt);
-                      const day = String(date.getDate()).padStart(2, "0");
-                      const month = String(date.getMonth() + 1).padStart(
-                        2,
-                        "0"
-                      );
-                      const year = date.getFullYear();
-                      return `${day}/${month}/${year}`;
-                    })()}
-                  </TableCell>
-                  <TableCell>{bill.spaceName || "-"}</TableCell>
-                  <TableCell>{bill.tableName || "-"}</TableCell>
-                  <TableCell>{bill.guestCount || "-"}</TableCell>
-                  <TableCell>{bill.totalAmount}</TableCell>
-                  <TableCell
-                    className={
-                      bill.status === "PAID" ? "text-green-600" : "text-red-500"
-                    }
+            {filteredBills.length > 0 ? (
+              filteredBills.map((bill, index) => {
+                const taxSettings =
+                  bill.settings?.filter((s) => s.type === "TAX") || [];
+
+                return (
+                  <Sheet
+                    key={bill._id}
+                    open={sheetOpen && selectedBill?._id === bill._id}
+                    onOpenChange={setSheetOpen}
                   >
-                    {bill.status}
-                  </TableCell>
-                </TableRow>
-              ))
+                    <SheetTrigger asChild>
+                      <TableRow
+                        className="cursor-pointer"
+                        onClick={() => setSelectedBill(bill)}
+                      >
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>
+                          {new Date(bill.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{bill.spaceName || "-"}</TableCell>
+                        <TableCell>{bill.tableName || "-"}</TableCell>
+                        <TableCell>{bill.guestCount || "-"}</TableCell>
+                        <TableCell>{bill.totalAmount}</TableCell>
+                        <TableCell
+                          className={
+                            bill.status === "PAID"
+                              ? "text-green-600"
+                              : "text-red-500"
+                          }
+                        >
+                          {bill.status}
+                        </TableCell>
+                      </TableRow>
+                    </SheetTrigger>
+                    <SheetContent
+                      side="right"
+                      className="w-[370px] sm:w-[420px]"
+                    >
+                      <div className="flex justify-around p-3 pt-10 items-center">
+                        <Button
+                          variant="destructive"
+                          className="rounded-2xl w-25"
+                        >
+                          DELETE
+                        </Button>
+                        <Button variant="default" className="rounded-2xl w-25">
+                          EDIT
+                        </Button>
+                        <span
+                          className={`text-xs font-semibold px-2 py-1 w-25 h-9.5 flex items-center justify-center rounded-full ${
+                            bill.status === "PAID"
+                              ? "bg-green-100 text-primary1 border border-primary1"
+                              : "bg-red-100 text-red-700 border border-red-300"
+                          }`}
+                        >
+                          {bill.status === "PAID" ? "Paid" : "Unpaid"}
+                        </span>
+                      </div>
+
+                      <div className="text-center text-sm px-4">
+                        <h2 className="text-xl font-bold">ORDARLY</h2>
+                        <p>Sanjay Ghodawat University</p>
+                        <p>23SCIA50014</p>
+                        <p>www.ordarly.com</p>
+                        <p>+91 8459278930</p>
+                        <hr className="my-2" />
+                        <div className="flex justify-between text-left text-xs">
+                          <div>
+                            <p>
+                              <strong>Bill #{bill.billNumber}</strong>
+                            </p>
+                            <p>Table: {bill.tableName}</p>
+                          </div>
+                          <div>
+                            <p>
+                              Date:{" "}
+                              {new Date(bill.createdAt).toLocaleDateString()}
+                            </p>
+                            <p>
+                              Time:{" "}
+                              {new Date(bill.createdAt).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                        <hr className="my-2" />
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr>
+                              <th align="left">Name</th>
+                              <th>Price</th>
+                              <th>Qty</th>
+                              <th align="right">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {bill.items.map((item, i) => (
+                              <tr key={i}>
+                                <td align="left">{item.itemName}</td>
+                                <td>₹{item.unitPrice}</td>
+                                <td>{item.quantity}</td>
+                                <td align="right">₹{item.totalPrice}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <hr className="my-2" />
+                        <div className="text-xs space-y-1 px-2">
+                          <div className="flex justify-between">
+                            <span>Subtotal</span>
+                            <span>₹{bill.subtotal?.toFixed(2)}</span>
+                          </div>
+
+                          {bill.discount > 0 && (
+                            <div className="flex justify-between">
+                              <span>Discount</span>
+                              <span className="text-red-500">
+                                -₹{bill.discount.toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+
+                          {taxSettings.length > 0 &&
+                            taxSettings.map((tax, idx) => (
+                              <div key={idx} className="flex justify-between">
+                                <span>{tax.name}</span>
+                                <span>
+                                  ₹
+                                  {((bill.subtotal * tax.value) / 100).toFixed(
+                                    2
+                                  )}
+                                </span>
+                              </div>
+                            ))}
+
+                          {bill.serviceCharge > 0 && (
+                            <div className="flex justify-between">
+                              <span>Service Charge</span>
+                              <span>₹{bill.serviceCharge.toFixed(2)}</span>
+                            </div>
+                          )}
+
+                          {bill.deliveryFee > 0 && (
+                            <div className="flex justify-between">
+                              <span>Delivery Fee</span>
+                              <span>₹{bill.deliveryFee.toFixed(2)}</span>
+                            </div>
+                          )}
+
+                          {bill.packagingFee > 0 && (
+                            <div className="flex justify-between">
+                              <span>Packaging Fee</span>
+                              <span>₹{bill.packagingFee.toFixed(2)}</span>
+                            </div>
+                          )}
+
+                          {bill.roundOff !== 0 && (
+                            <div className="flex justify-between">
+                              <span>Round Off</span>
+                              <span>
+                                {bill.roundOff > 0
+                                  ? `+₹${bill.roundOff.toFixed(2)}`
+                                  : `-₹${Math.abs(bill.roundOff).toFixed(2)}`}
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="flex justify-between font-semibold text-sm mt-2 pt-2 border-t">
+                            <span>Grand Total</span>
+                            <span>₹{bill.totalAmount.toFixed(2)}</span>
+                          </div>
+                        </div>{" "}
+                        <hr className="my-2" />
+                        <p className="text-xs">Thank you. Visit Again.</p>
+                        {bill.status !== "PAID" && (
+                          <div className="mt-4 flex justify-around">
+                            <Button
+                              variant="outline"
+                              className="text-green-600 border-green-500"
+                            >
+                              💵 CASH
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="text-blue-600 border-blue-500"
+                            >
+                              💳 UPI / CARD
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                );
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-gray-500">
+                <TableCell colSpan={7} className="text-center text-gray-500">
                   No bills found.
                 </TableCell>
               </TableRow>

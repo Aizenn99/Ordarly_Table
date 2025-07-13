@@ -150,6 +150,20 @@ const AdminMenu = () => {
   const handlechange = (field, value) => {
     setformData((prev) => ({ ...prev, [field]: value }));
   };
+   const fixImageURL = (url) => {
+    // If it's already a full URL but has localhost, replace with actual IP
+    if (url?.startsWith("http://localhost")) {
+      return url.replace("http://localhost:8000", import.meta.env.VITE_API_URL);
+    }
+
+    // If it's a relative URL like /uploads/...
+    if (url?.startsWith("/uploads")) {
+      return `${import.meta.env.VITE_API_URL}${url}`;
+    }
+
+    // Else return as is
+    return url || "/placeholder.png";
+  };
 
   const generateDynamicMenuFormControls = () => {
     return addMenuItemsFormControls.map((control) => {
@@ -316,10 +330,11 @@ const AdminMenu = () => {
                   key={item._id}
                   className="bg-white shadow rounded-xl h-[280px] overflow-hidden relative"
                 >
-                  <img
-                    src={item.imageURL || "/placeholder.png"}
+                   <img
+                    onClick={() => handleItemClick(item)}
+                    src={fixImageURL(item.imageURL)}
                     alt={item.title || "Item"}
-                    className="w-full h-36 object-cover"
+                    className="w-full h-36 object-cover rounded-t-xl"
                   />
                   <div className="p-3">
                     <h3 className="font-semibold text-md text-gray-800 mb-1">

@@ -6,6 +6,7 @@ import StaffCartSlice from "./staff-slice/cart"
 import StaffBillSlice from "./staff-slice/Bill";
 import kitchenOrderSlice from "./kitchen-slice/order-slice"
 import dashboardSlice from "./dashboard-slice/report-slice"
+import settingSlice from "./admin-slice/settings";
 
 const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ const store = configureStore({
     staffBill: StaffBillSlice,
     kitchenOrder : kitchenOrderSlice,
     dashboard: dashboardSlice,
+    adminSettings: settingSlice,
   },
 });
 

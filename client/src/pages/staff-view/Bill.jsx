@@ -17,10 +17,9 @@ const StaffBill = () => {
   const { bills } = useSelector((state) => state.staffBill);
 
   useEffect(() => {
-  dispatch(getAllBills()).then((res) => {
-    console.log("🎯 All bills fetched:", res.payload);
-  });
-}, [dispatch]);
+    dispatch(getAllBills()).then((res) => {
+    });
+  }, [dispatch]);
 
   const totalBills = bills.length;
   const paidBills = bills.filter(
@@ -92,7 +91,7 @@ const StaffBill = () => {
                   Created: {new Date(bill.createdAt).toLocaleTimeString()}
                 </p>
                 <p className="text-sm font-medium">
-                  Status:
+                  Status:{" "}
                   <span className={isPaid ? "text-primary1" : "text-red-600"}>
                     {bill.status.toUpperCase()}
                   </span>
@@ -101,7 +100,7 @@ const StaffBill = () => {
 
               <Accordion type="single" collapsible>
                 <AccordionItem value="details">
-                  <AccordionTrigger className="justify-center text-black"></AccordionTrigger>
+                  <AccordionTrigger className="justify-center text-black" />
                   <AccordionContent>
                     <div className="mt-3">
                       {bill.items.map((item, i) => (
@@ -121,16 +120,42 @@ const StaffBill = () => {
                       ))}
 
                       {!isPaid && (
+                        <div className="flex justify-between items-center mt-6 mx-10 gap-2">
+                          <Button
+                            onClick={() =>
+                              navigate("/staff/edit-bill", { state: bill })
+                            }
+                            className="w-30 bg-primary1 text-white hover:bg-green-800"
+                          >
+                            Edit Bill
+                          </Button>
+                          <Button
+                            onClick={() =>
+                              navigate("/staff/pay-bill", { state: bill })
+                            }
+                            className="w-30 bg-primary1 text-white hover:bg-green-800"
+                          >
+                            Pay
+                          </Button>
+                        </div>
+                      )}
+
+                      {isPaid && (
                         <Button
-                           onClick={() => navigate("/staff/pay-bill", { state: bill })}
-                         className="mt-4 w-full bg-primary1 text-white hover:bg-green-800">
-                          PAY
+                          onClick={() =>
+                            navigate("/staff/edit-bill", { state: bill })
+                          }
+                          className="mt-3 w-full bg-primary1 text-white hover:bg-green-800"
+                        >
+                          Edit Bill
                         </Button>
                       )}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
+
+              {/* Show edit button outside only for paid bills */}
             </div>
           );
         })}
