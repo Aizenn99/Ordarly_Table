@@ -125,7 +125,7 @@ const AdminBills = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <div className="hidden sm:flex flex-wrap gap-2">
-            {["today", "yesterday", "last7", "last30"].map((value) => (
+            {["today", "yesterday", "last 7 Days", "last 30 Days"].map((value) => (
               <Button
                 key={value}
                 variant={dateFilter === value ? "default" : "outline"}
@@ -326,7 +326,8 @@ const AdminBills = () => {
                           {taxSettings.length > 0 &&
                             taxSettings.map((tax, idx) => (
                               <div key={idx} className="flex justify-between">
-                                <span>{tax.name}</span>
+                                <span>{tax.name}  {tax.value}%  </span>
+                               
                                 <span>
                                   ₹
                                   {((bill.subtotal * tax.value) / 100).toFixed(

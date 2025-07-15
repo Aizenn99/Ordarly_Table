@@ -17,8 +17,7 @@ const StaffBill = () => {
   const { bills } = useSelector((state) => state.staffBill);
 
   useEffect(() => {
-    dispatch(getAllBills()).then((res) => {
-    });
+    dispatch(getAllBills()).then((res) => {});
   }, [dispatch]);
 
   const totalBills = bills.length;
@@ -123,11 +122,11 @@ const StaffBill = () => {
                         <div className="flex justify-between items-center mt-6 mx-10 gap-2">
                           <Button
                             onClick={() =>
-                              navigate("/staff/edit-bill", { state: bill })
+                              navigate("/staff/menu", { state: bill })
                             }
                             className="w-30 bg-primary1 text-white hover:bg-green-800"
                           >
-                            Edit Bill
+                            Edit Items
                           </Button>
                           <Button
                             onClick={() =>
@@ -140,16 +139,27 @@ const StaffBill = () => {
                         </div>
                       )}
 
-                      {isPaid && (
-                        <Button
-                          onClick={() =>
-                            navigate("/staff/edit-bill", { state: bill })
-                          }
-                          className="mt-3 w-full bg-primary1 text-white hover:bg-green-800"
-                        >
-                          Edit Bill
-                        </Button>
-                      )}
+                      {/* {isPaid && (
+                        <div className="flex justify-center mt-4">
+                         
+                          <Button
+                            onClick={() =>
+                              navigate("/staff/menu", {
+                                state: {
+                                  billNumber: bill.billNumber,
+                                  tableName: bill.tableName,
+                                  guestCount: bill.guestCount,
+                                  spaceName: bill.spaceName,
+                                  items: bill.items,
+                                },
+                              })
+                            }
+                            className="bg-primary1 text-white hover:bg-green-800"
+                          >
+                            Edit Items
+                          </Button>
+                        </div>
+                      )} */}
                     </div>
                   </AccordionContent>
                 </AccordionItem>

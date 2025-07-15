@@ -25,6 +25,11 @@ const billSchema = new mongoose.Schema(
           type: String,
           required: true,
         },
+        itemId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "MenuItem",
+          required: true,
+        },
         quantity: {
           type: Number,
           required: true,

@@ -3,7 +3,7 @@ import {
   fetchSubCategory,
   getMenuItem,
 } from "@/store/admin-slice/menuItem";
-import React, { use, useEffect, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { LuUtensils } from "react-icons/lu";
 import { Sheet, SheetContent, SheetHeader } from "@/components/ui/sheet";
@@ -16,7 +16,7 @@ import {
 } from "@/store/staff-slice/cart";
 import { HiOutlineShoppingCart } from "react-icons/hi2";
 import { Separator } from "@/components/ui/separator";
-import { generateBill } from "@/store/staff-slice/Bill";
+import { deleteBill, generateBill } from "@/store/staff-slice/Bill";
 import {
   markItemsAsSentToKitchen,
   sendToKitchen,
@@ -35,6 +35,7 @@ const StaffMenu = () => {
     const saved = localStorage.getItem("cart_quantities");
     return saved ? JSON.parse(saved) : {};
   });
+
   const apiBaseURL = import.meta.env.VITE_API_URL; // Make sure it's set to IP
   const fixImageURL = (url) => {
     // If it's already a full URL but has localhost, replace with actual IP
@@ -62,6 +63,8 @@ const StaffMenu = () => {
   const dispatch = useDispatch();
   const { state } = useLocation();
 
+  const isEditMode = !!state?.items && !!state?.billNumber;
+
   useEffect(() => {
     if (!state?.tableName) {
       setQuantities({}); // reset all quantities to 0
@@ -74,14 +77,73 @@ const StaffMenu = () => {
     dispatch(fetchSubCategory());
   }, [dispatch]);
 
+  const hasRestoredCart = useRef(false);
+
   useEffect(() => {
-    if (state?.tableName) {
-      dispatch(getCartByTable(state.tableName))
-        .unwrap()
-        .then((data) => setCart(data))
-        .catch(() => toast.error("Cart is not in Storage"));
-    }
-  }, [dispatch, state?.tableName]);
+    const restoreCartFromBill = async () => {
+      if (
+        state?.items &&
+        !hasRestoredCart.current &&
+        menuItem.length > 0 &&
+        (!cart || !cart.items || cart.items.length === 0)
+      ) {
+        hasRestoredCart.current = true;
+
+        const validItemIds = new Set(menuItem.map((m) => m._id));
+        console.log("✅ Valid Menu Item IDs:", [...validItemIds]);
+
+        const itemsToRestore = state.items.filter((item) => {
+          const id = item.itemId?._id || item.itemId || item._id;
+          return validItemIds.has(id);
+        });
+
+        console.log("🛒 Filtered Items to Restore:", itemsToRestore);
+
+        try {
+          // 🛠 Add all items back to cart
+          const addPromises = itemsToRestore.map((item) =>
+            dispatch(
+              addItemToCart({
+                tableName: state.tableName,
+                guestCount: state.guestCount,
+                itemId: item.itemId?._id || item.itemId || item._id,
+                quantity: item.quantity,
+                note: item.note || "",
+              })
+            ).unwrap()
+          );
+
+          await Promise.all(addPromises);
+
+          // 🔄 Fetch updated cart
+          const updatedCart = await dispatch(
+            getCartByTable(state.tableName)
+          ).unwrap();
+          setCart(updatedCart);
+          setCartItems(updatedCart.items || []);
+          toast.success("✅ Cart restored from bill");
+
+          // 🗑️ Delete previous bill if billNumber exists
+          if (state.billNumber) {
+            await dispatch(deleteBill(state.billNumber)).unwrap();
+            console.log("🗑️ Deleted original bill:", state.billNumber);
+          }
+        } catch (err) {
+          console.error("❌ Failed to restore cart or delete bill:", err);
+          toast.error("❌ Failed to restore cart or delete bill");
+        }
+      }
+    };
+
+    restoreCartFromBill();
+  }, [
+    state?.items,
+    cart,
+    dispatch,
+    menuItem.length,
+    state?.tableName,
+    state?.guestCount,
+  ]);
 
   useEffect(() => {
     if (!state?.tableName) {
@@ -683,7 +745,7 @@ const StaffMenu = () => {
                       onClick={handleGenerateBill}
                       className="bg-primary1 text-white font-semibold py-2 w-full rounded-full"
                     >
-                      Generate Bill
+                      {isEditMode ? "Edit Bill" : "Generate Bill"}
                     </button>
                   </div>
                 </div>

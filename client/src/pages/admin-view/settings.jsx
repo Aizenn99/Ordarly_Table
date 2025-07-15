@@ -20,7 +20,7 @@ import {
 } from "@/config";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { addSetting, fetchSettings } from "@/store/admin-slice/settings";
+import { addSetting, deleteSetting, fetchSettings } from "@/store/admin-slice/settings";
 import { MdDeleteOutline } from "react-icons/md";
 
 // ✅ Initial Form States
@@ -117,6 +117,8 @@ const AdminSettings = () => {
     dispatch(fetchSettings("RECEIPT"));
   }, [dispatch]);
 
+
+
   const renderSettingList = (items = []) => (
     <div className="overflow-y-auto max-h-64 mb-4">
       {items.length > 0 ? (
@@ -126,7 +128,8 @@ const AdminSettings = () => {
             className="flex items-center justify-between border-b px-2 mb-2 py-1"
           >
             <span className="text-sm">{item.name || item.type}</span>
-            <MdDeleteOutline className="text-red-500 cursor-pointer hover:text-red-700" />
+            <MdDeleteOutline 
+            onClick={() => dispatch(deleteSetting(item._id))} className="text-red-500 cursor-pointer hover:text-red-700" />
           </div>
         ))
       ) : (
