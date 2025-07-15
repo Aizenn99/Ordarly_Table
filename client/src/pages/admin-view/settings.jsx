@@ -20,7 +20,11 @@ import {
 } from "@/config";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { addSetting, deleteSetting, fetchSettings } from "@/store/admin-slice/settings";
+import {
+  addSetting,
+  deleteSetting,
+  fetchSettings,
+} from "@/store/admin-slice/settings";
 import { MdDeleteOutline } from "react-icons/md";
 
 // ✅ Initial Form States
@@ -85,6 +89,7 @@ const AdminSettings = () => {
           mappedData.unit = "AMOUNT";
           break;
         case "service":
+          mappedData.type = "SERVICE_CHARGE"; // 👈 force correct backend expected type
           mappedData.name = data.serviceName;
           mappedData.value = Number(data.servicePrice);
           mappedData.unit = "PERCENTAGE";
@@ -117,8 +122,6 @@ const AdminSettings = () => {
     dispatch(fetchSettings("RECEIPT"));
   }, [dispatch]);
 
-
-
   const renderSettingList = (items = []) => (
     <div className="overflow-y-auto max-h-64 mb-4">
       {items.length > 0 ? (
@@ -128,8 +131,10 @@ const AdminSettings = () => {
             className="flex items-center justify-between border-b px-2 mb-2 py-1"
           >
             <span className="text-sm">{item.name || item.type}</span>
-            <MdDeleteOutline 
-            onClick={() => dispatch(deleteSetting(item._id))} className="text-red-500 cursor-pointer hover:text-red-700" />
+            <MdDeleteOutline
+              onClick={() => dispatch(deleteSetting(item._id))}
+              className="text-red-500 cursor-pointer hover:text-red-700"
+            />
           </div>
         ))
       ) : (
@@ -151,7 +156,12 @@ const AdminSettings = () => {
             buttonText="Add"
             formControls={taxSettingsFormControls}
             onSubmit={(e) =>
-              handleSubmit("tax", taxFormData, () => setTaxFormData(initialTaxFormData), e)
+              handleSubmit(
+                "tax",
+                taxFormData,
+                () => setTaxFormData(initialTaxFormData),
+                e
+              )
             }
           />
         </>
@@ -169,8 +179,11 @@ const AdminSettings = () => {
             buttonText="Add"
             formControls={deliverySettingsFormControls}
             onSubmit={(e) =>
-              handleSubmit("delivery", deliveryData, () =>
-                setDeliveryData(initialDeliveryFormData), e
+              handleSubmit(
+                "delivery",
+                deliveryData,
+                () => setDeliveryData(initialDeliveryFormData),
+                e
               )
             }
           />
@@ -189,8 +202,11 @@ const AdminSettings = () => {
             buttonText="Add"
             formControls={DiscountSettingsFormControls}
             onSubmit={(e) =>
-              handleSubmit("discount", discountData, () =>
-                setDiscountData(initialDiscountFormData), e
+              handleSubmit(
+                "discount",
+                discountData,
+                () => setDiscountData(initialDiscountFormData),
+                e
               )
             }
           />
@@ -209,8 +225,11 @@ const AdminSettings = () => {
             buttonText="Add"
             formControls={PackageSettingsFormControls}
             onSubmit={(e) =>
-              handleSubmit("package", packageData, () =>
-                setPackageData(initialPackageFormData), e
+              handleSubmit(
+                "package",
+                packageData,
+                () => setPackageData(initialPackageFormData),
+                e
               )
             }
           />
@@ -229,8 +248,11 @@ const AdminSettings = () => {
             buttonText="Add"
             formControls={serviceChargeSettingsFormControls}
             onSubmit={(e) =>
-              handleSubmit("service", serviceData, () =>
-                setServiceData(initialServiceFormData), e
+              handleSubmit(
+                "service",
+                serviceData,
+                () => setServiceData(initialServiceFormData),
+                e
               )
             }
           />
@@ -249,8 +271,11 @@ const AdminSettings = () => {
             buttonText="Add"
             formControls={receiptSettingstFormControls}
             onSubmit={(e) =>
-              handleSubmit("receipt", receiptData, () =>
-                setReceiptData(initialReceiptFormData), e
+              handleSubmit(
+                "receipt",
+                receiptData,
+                () => setReceiptData(initialReceiptFormData),
+                e
               )
             }
           />
@@ -271,7 +296,9 @@ const AdminSettings = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl text-primary1 font-semibold mb-4">Admin Settings</h1>
+      <h1 className="text-2xl text-primary1 font-semibold mb-4">
+        Admin Settings
+      </h1>
       <p className="text-muted-foreground tracking-tight mb-6">
         Manage your business settings and preferences.
       </p>
@@ -288,8 +315,12 @@ const AdminSettings = () => {
                 onClick={() => setSelectedSetting(item)}
                 className="bg-white rounded-lg shadow-md p-4 hover:bg-gray-200 border-[1px] border-primary1 cursor-pointer"
               >
-                <h2 className="text-lg text-primary1 font-semibold mb-2">{item.name}</h2>
-                <p className="text-muted-foreground text-xs">{item.description}</p>
+                <h2 className="text-lg text-primary1 font-semibold mb-2">
+                  {item.name}
+                </h2>
+                <p className="text-muted-foreground text-xs">
+                  {item.description}
+                </p>
               </div>
             </SheetTrigger>
             <SheetContent side="right">

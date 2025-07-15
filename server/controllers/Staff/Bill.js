@@ -7,7 +7,6 @@ const Setting = require("../../models/taxsettings"); // ✅ fixed import name
 
 
 // ✅ Generate Bill with itemId for future restore
-
 exports.generateBill = async (req, res) => {
   try {
     const { tableName, spaceName, paymentMethod } = req.body;
@@ -16,32 +15,27 @@ exports.generateBill = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields." });
     }
 
-    // 🔍 Get all active fee/tax settings
     const settings = await Setting.find({ isActive: true });
 
     const getValue = (type) => {
       const setting = settings.find((s) => s.type === type);
       return {
-        value: setting?.value || 0,
+        value: Math.abs(setting?.value || 0),
         unit: setting?.unit || "PERCENTAGE",
       };
     };
 
-    // 💰 Extract settings
-    const { value: taxValue, unit: taxUnit } = getValue("TAX");
     const { value: discountValue, unit: discountUnit } = getValue("DISCOUNT");
     const { value: serviceValue, unit: serviceUnit } = getValue("SERVICE_CHARGE");
     const { value: deliveryFee } = getValue("DELIVERY");
     const { value: packagingFee } = getValue("PACKAGE");
 
-    // 🛒 Fetch cart
     const cart = await ItemCart.findOne({ tableName }).populate("items.itemId");
 
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "No items found for this table" });
     }
 
-    // 🧾 Prepare bill items
     const itemDetails = cart.items.map((item) => ({
       itemId: item.itemId._id,
       itemName: item.itemId.title,
@@ -53,17 +47,47 @@ exports.generateBill = async (req, res) => {
 
     const subtotal = itemDetails.reduce((sum, item) => sum + item.totalPrice, 0);
 
-    // 📊 Charges
-    const tax = taxUnit === "PERCENTAGE" ? (subtotal * taxValue) / 100 : taxValue;
-    const discount = discountUnit === "PERCENTAGE" ? (subtotal * discountValue) / 100 : discountValue;
-    const serviceCharge = serviceUnit === "PERCENTAGE" ? (subtotal * serviceValue) / 100 : serviceValue;
+    // 1️⃣ Apply Discount First
+    const discount = discountUnit === "PERCENTAGE"
+      ? (subtotal * discountValue) / 100
+      : discountValue;
 
-    const amountBeforeRound = subtotal + tax + serviceCharge + deliveryFee + packagingFee - discount;
+    const discountedSubtotal = subtotal - discount;
+
+    // 2️⃣ Apply Taxes from Settings (Multiple)
+    const taxSettings = settings.filter((s) => s.type === "TAX");
+    let totalTax = 0;
+    const appliedTaxes = [];
+
+    for (const tax of taxSettings) {
+      const taxAmount = tax.unit === "PERCENTAGE"
+        ? (discountedSubtotal * tax.value) / 100
+        : tax.value;
+
+      totalTax += taxAmount;
+
+      appliedTaxes.push({
+        name: tax.name,
+        value: tax.value,
+        unit: tax.unit,
+        amount: +taxAmount.toFixed(2),
+      });
+    }
+
+    // 3️⃣ Service Charge on discounted subtotal
+    const serviceCharge = serviceUnit === "PERCENTAGE"
+      ? (discountedSubtotal * serviceValue) / 100
+      : serviceValue;
+
+    // 4️⃣ Total Calculation
+    const amountBeforeRound =
+      discountedSubtotal + totalTax + serviceCharge + deliveryFee + packagingFee;
+
     const roundedTotal = Math.round(amountBeforeRound);
-    const roundOff = roundedTotal - amountBeforeRound;
+    const roundOff = +(roundedTotal - amountBeforeRound).toFixed(2);
     const totalAmount = roundedTotal;
 
-    // 📋 Snapshot of applied settings
+    // 5️⃣ Save settings snapshot
     const settingsSnapshot = settings.map((s) => ({
       type: s.type,
       name: s.name,
@@ -71,7 +95,7 @@ exports.generateBill = async (req, res) => {
       unit: s.unit,
     }));
 
-    // 🔢 Generate bill number with retries
+    // 6️⃣ Create Bill with Retry
     let bill;
     let attempts = 0;
     const maxAttempts = 5;
@@ -87,11 +111,12 @@ exports.generateBill = async (req, res) => {
         guestCount: cart.guestCount,
         items: itemDetails,
         subtotal,
-        tax,
         discount,
+        tax: totalTax,
+        taxBreakdown: appliedTaxes,
+        serviceCharge,
         deliveryFee,
         packagingFee,
-        serviceCharge,
         roundOff,
         totalAmount,
         status: "UNPAID",
@@ -102,10 +127,10 @@ exports.generateBill = async (req, res) => {
 
       try {
         await bill.save();
-        break; // ✅ Success
+        break;
       } catch (err) {
         if (err.code === 11000) {
-          console.warn(`⚠️ Duplicate billNumber: ${billNumber}, retrying...`);
+          console.warn(`Duplicate billNumber: ${billNumber}, retrying...`);
         } else {
           throw err;
         }
@@ -116,26 +141,20 @@ exports.generateBill = async (req, res) => {
       return res.status(500).json({ message: "Could not generate unique bill number" });
     }
 
-    // 🧹 Clear cart
     await ItemCart.deleteOne({ tableName });
 
-    // 📡 Notify via socket
     const io = req.app.get("io");
     io.emit("new-bill", bill);
-
-    // 🧼 Clean `_id` from items before sending to frontend
-
 
     res.status(201).json({
       message: "Bill generated successfully",
       bill,
     });
   } catch (error) {
-    console.error("❌ Error generating bill:", error);
+    console.error("Error generating bill:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 // 2. Get Bills Only Created By Logged-In Staff
 exports.getAllBills = async (req, res) => {
   try {

@@ -29,8 +29,8 @@ const AdminOrders = () => {
 
     // Listen for real-time KOT ready updates
     socket.on("kot-ready", () => {
-  dispatch(fetchKitchenOrders());
-});
+      dispatch(fetchKitchenOrders());
+    });
 
     return () => socket.off("kot-ready");
   }, [dispatch]);
@@ -51,7 +51,9 @@ const AdminOrders = () => {
 
   return (
     <div className="w-full h-full p-4">
-      <h1 className="text-xl font-semibold mb-4">Current Orders</h1>
+      <h1 className="text-xl font-semibold text-primary1 mb-4">
+        Current Orders
+      </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {orders.map((order) => (
           <Dialog key={order.kotNumber}>
@@ -66,11 +68,13 @@ const AdminOrders = () => {
 
                 <div className="flex items-center mt-2 gap-2 text-sm text-gray-700">
                   <MdTableRestaurant className="w-4 h-4" />
-                  Table | <span className="text-primary1">{order.tableName}</span>
+                  Table |{" "}
+                  <span className="text-primary1">{order.tableName}</span>
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-gray-700 mt-1">
-                  SpaceName | <span className="text-primary1">{order.spaceName}</span>
+                  SpaceName |{" "}
+                  <span className="text-primary1">{order.spaceName}</span>
                 </div>
 
                 <div className="my-2 border-b  " />
@@ -90,7 +94,9 @@ const AdminOrders = () => {
                   >
                     <span
                       className={`h-2 w-2 rounded-full ${
-                        order.status === "ready" ? "bg-green-600" : "bg-yellow-500"
+                        order.status === "ready"
+                          ? "bg-green-600"
+                          : "bg-yellow-500"
                       } inline-block`}
                     />
                     {order.status || "New Order"}
@@ -103,7 +109,9 @@ const AdminOrders = () => {
               <DialogHeader>
                 <DialogTitle className="text-lg">
                   {order.username || "Staff"} —{" "}
-                  <span className="text-primary1">{order.spaceName || "N/A"}</span>
+                  <span className="text-primary1">
+                    {order.spaceName || "N/A"}
+                  </span>
                 </DialogTitle>
               </DialogHeader>
 
@@ -115,7 +123,8 @@ const AdminOrders = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <MdTableRestaurant className="w-4 h-4" />
-                    Table {order.tableName}
+                    Table{" "}
+                    <span className="text-primary1">{order.tableName}</span>
                   </div>
                 </div>
 
@@ -123,7 +132,6 @@ const AdminOrders = () => {
                   <div className="grid grid-cols-[2fr_2fr] font-semibold border-b pb-1 mb-1">
                     <span>Item</span>
                     <span className="text-center">Qty</span>
-                    
                   </div>
 
                   <div className="space-y-1">
@@ -132,9 +140,10 @@ const AdminOrders = () => {
                         key={index}
                         className="grid grid-cols-[2fr_2fr] items-center"
                       >
-                        <span>{index + 1}. {item.itemName}</span>
+                        <span>
+                          {index + 1}. {item.itemName}
+                        </span>
                         <span className="text-center">{item.quantity}</span>
-                       
                       </div>
                     ))}
                   </div>

@@ -204,14 +204,14 @@ export const PackageSettingsFormControls = [
 export const serviceChargeSettingsFormControls = [
   {
     label: "Service Charge Name",
-    name: "serviceChargeName",
+    name: "serviceName",
     componentType: "input",
     type: "text",
     placeholder: "Charge Name",
   },
   {
     label: "Service Charge Percentage",
-    name: "serviceChargePercentage",
+    name: "servicePrice",
     componentType: "input",
     type: "number",
     placeholder: "Percentage",

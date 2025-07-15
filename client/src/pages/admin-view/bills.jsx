@@ -125,20 +125,22 @@ const AdminBills = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <div className="hidden sm:flex flex-wrap gap-2">
-            {["today", "yesterday", "last 7 Days", "last 30 Days"].map((value) => (
-              <Button
-                key={value}
-                variant={dateFilter === value ? "default" : "outline"}
-                onClick={() => setDateFilter(value)}
-              >
-                {value.charAt(0).toUpperCase() +
-                  value
-                    .slice(1)
-                    .replace("last", "Last ")
-                    .replace("today", "Today")
-                    .replace("yesterday", "Yesterday")}
-              </Button>
-            ))}
+            {["today", "yesterday", "last 7 Days", "last 30 Days"].map(
+              (value) => (
+                <Button
+                  key={value}
+                  variant={dateFilter === value ? "default" : "outline"}
+                  onClick={() => setDateFilter(value)}
+                >
+                  {value.charAt(0).toUpperCase() +
+                    value
+                      .slice(1)
+                      .replace("last", "Last ")
+                      .replace("today", "Today")
+                      .replace("yesterday", "Yesterday")}
+                </Button>
+              )
+            )}
             <CalendarDateRangePicker
               onUpdate={(range) => {
                 setCustomRange(range);
@@ -323,19 +325,13 @@ const AdminBills = () => {
                             </div>
                           )}
 
-                          {taxSettings.length > 0 &&
-                            taxSettings.map((tax, idx) => (
-                              <div key={idx} className="flex justify-between">
-                                <span>{tax.name}  {tax.value}%  </span>
-                               
-                                <span>
-                                  ₹
-                                  {((bill.subtotal * tax.value) / 100).toFixed(
-                                    2
-                                  )}
-                                </span>
-                              </div>
-                            ))}
+                        {bill.taxBreakdown.map((tax, idx) => (
+  <div key={idx} className="flex justify-between">
+    <span>{tax.name} ({tax.value}{tax.unit === "PERCENTAGE" ? "%" : "₹"})</span>
+    <span>₹{tax.amount.toFixed(2)}</span>
+  </div>
+))}
+
 
                           {bill.serviceCharge > 0 && (
                             <div className="flex justify-between">
