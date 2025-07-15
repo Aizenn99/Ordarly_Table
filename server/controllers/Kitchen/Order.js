@@ -95,7 +95,10 @@ exports.updateKOTStatus = async (req, res) => {
       return res.status(404).json({ error: "Kitchen Order not found." });
     }
 
-    // ⚠️ Don't emit kot-ready here (frontend now sends it with selected items)
+    // ✅ Emit updated order to all connected clients
+    if (req.io) {
+      req.io.emit("kot-ready", updatedOrder); // <-- 👈 This is key
+    }
 
     res.json(updatedOrder);
   } catch (error) {
